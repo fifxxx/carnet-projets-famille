@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Règles volontairement simples pour un usage familial privé, sans système de compte.
+// Elles n'autorisent la lecture/écriture que sur UN SEUL document précis
+// (carnetFamilial/menage), qui est celui utilisé par l'application.
+// Personne ne peut lire ou modifier autre chose dans votre projet Firebase.
+//
+// Important : cela reste ouvert à quiconque connaît l'adresse de votre projet Firebase.
+// Gardez donc votre dépôt GitHub PRIVÉ (voir README.md) pour ne pas exposer
+// publiquement les identifiants de votre projet.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /carnetFamilial/menage {
+      allow read, write: if true;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
