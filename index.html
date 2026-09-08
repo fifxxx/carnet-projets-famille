@@ -237,6 +237,69 @@
   .act-link{color:var(--ink-soft); text-decoration:underline; display:flex; align-items:center; gap:4px;}
   .act-link:hover{color:var(--ink);}
 
+  /* Vue d'ensemble des projets */
+  .overview{
+    background:linear-gradient(135deg, var(--ink) 0%, #2A3D5C 100%); color:var(--paper);
+    border-radius:12px; padding:14px 16px; margin-bottom:14px; box-shadow:3px 3px 0 rgba(0,0,0,0.15);
+  }
+  .overview-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:9px; gap:10px; }
+  .overview-title{ font-family:'Fraunces',serif; font-weight:600; font-size:14px; }
+  .overview-amounts{ font-family:'Fraunces',serif; font-weight:600; font-size:13px; font-variant-numeric:tabular-nums; }
+  .overview-amounts small{ opacity:.6; font-weight:400; }
+  .overview-bar{ position:relative; height:16px; border-radius:20px; overflow:hidden; background:rgba(255,255,255,0.14); }
+  .overview-fill{ height:100%; border-radius:20px; background:linear-gradient(90deg, var(--gauge-start), var(--gauge-end)); transition:width .5s cubic-bezier(.3,1.2,.5,1); }
+  .overview-stats{ display:flex; gap:14px; flex-wrap:wrap; margin-top:9px; font-size:11.5px; color:rgba(251,243,228,0.75); }
+  .overview-stats b{ color:var(--paper); font-family:'Fraunces',serif; }
+
+  /* Recherche et filtres */
+  .toolbar{ display:flex; gap:8px; margin-bottom:10px; align-items:center; }
+  .toolbar input{ flex:1; padding:7px 12px; font-size:13.5px; border-radius:20px; }
+  .filter-row{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  .filter-chip{
+    font-size:11.5px; font-weight:600; padding:4px 11px; border-radius:20px; cursor:pointer;
+    border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); transition:all .15s ease;
+  }
+  .filter-chip.on{ color:#fff; border-color:transparent; }
+  .filter-chip:active{ transform:scale(.94); }
+
+  /* Badges d'échéance */
+  .deadline-badge{ font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; letter-spacing:.2px; }
+  .deadline-badge.late{ background:var(--danger); color:#fff; }
+  .deadline-badge.soon{ background:var(--ochre); color:#fff; }
+
+  /* Confirmation de suppression */
+  .confirm-del{
+    font-size:11px; font-weight:700; background:var(--danger); color:#fff; border:none;
+    padding:6px 10px; border-radius:7px; cursor:pointer; white-space:nowrap;
+  }
+  .confirm-del:active{ transform:scale(.94); }
+
+  /* Projets terminés */
+  .card.done-project{ opacity:.62; background:var(--paper-dim); }
+  .card.done-project .card-name{ text-decoration:line-through; }
+  .archive-header{
+    display:flex; align-items:center; justify-content:space-between; gap:8px; cursor:pointer;
+    background:var(--paper-dim); border:1.5px dashed var(--line); border-radius:9px;
+    padding:9px 12px; margin-top:18px; font-size:13px; font-weight:600; color:var(--ink-soft);
+  }
+  .archive-header:hover{ border-color:var(--ink); color:var(--ink); }
+
+  /* Confettis */
+  #confetti-layer{ position:fixed; inset:0; pointer-events:none; z-index:999; overflow:hidden; }
+  .confetti-bit{ position:absolute; width:9px; height:14px; border-radius:2px; animation: confettiFall 1.9s ease-in forwards; }
+  @keyframes confettiFall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(105vh) rotate(720deg); opacity:0; }
+  }
+
+  .author-note{ text-align:center; font-size:11px; color:rgba(251,243,228,0.4); margin-top:4px; }
+  .whoami{ display:flex; align-items:center; gap:6px; }
+  .whoami select{
+    width:auto; font-size:11.5px; padding:3px 8px; border-radius:20px; background:rgba(255,255,255,0.1);
+    border:1.5px solid rgba(251,243,228,0.25); color:var(--paper);
+  }
+  .whoami select option{ color:var(--ink); }
+
   .sync-note{ text-align:center; font-size:11.5px; color:rgba(251,243,228,0.55); margin-top:16px; }
 </style>
 </head>
@@ -248,7 +311,14 @@
       <h1>Le carnet de projets</h1>
       <span id="loadingTag">chargement…</span>
     </div>
-    <p class="tagline">Petits sous, grands projets ✨</p>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+      <p class="tagline" style="margin:2px 0 8px 1px;">Petits sous, grands projets ✨</p>
+      <div class="whoami">
+        <select id="whoamiSelect" title="Qui utilise le carnet ?">
+          <option value="">Qui es-tu ?</option>
+        </select>
+      </div>
+    </div>
   </div>
 
   <div class="summary">
@@ -261,7 +331,9 @@
   <div class="page" id="page"></div>
 
   <div class="sync-note">Ce carnet est partagé — tout ce qui est ajouté ou modifié ici est visible par vous et votre épouse.</div>
+  <div class="author-note" id="authorNote"></div>
 </div>
+<div id="confetti-layer"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
@@ -361,14 +433,23 @@ const ICON_NOTE_TEXT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 const ICON_LINK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a3.5 3.5 0 000 5l.5.5a3.5 3.5 0 005-5l-1-1"/><path d="M14 10a3.5 3.5 0 000-5l-.5-.5a3.5 3.5 0 00-5 5l1 1"/></svg>';
 const ICON_IMAGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg>';
 const ICON_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-7.5 7-12a7 7 0 10-14 0c0 4.5 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/></svg>';
+const ICON_CHECK_CIRCLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.5 2.5 4.5-5"/></svg>';
+const ICON_UNDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h11a5 5 0 010 10h-6"/><path d="M7.5 5.5L4 9l3.5 3.5"/></svg>';
+const ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>';
 
 let state = { reserveTotal: 0, reserveSecurite: 0, projets: [], videGrenier: [], idees: [], activites: [] };
 let ui = {
   activeTab: 'reserves', showAddProjet: false, showAddVG: false, showAddIdee: false, showAddActivite: false,
   newProjetPersonne: PERSONS[0], newProjetType: TYPES[0], newProjetPriorite: 'Peut-être',
   newVGPersonne: PERSONS[0], newIdeePriorite: 'Moyenne', newActivitePriorite: 'Moyenne',
-  expandedProjects: new Set(), emojiPickerOpen: new Set()
+  expandedProjects: new Set(), emojiPickerOpen: new Set(),
+  expandedIdees: new Set(), expandedActivites: new Set(),
+  projetSearch: '', projetFiltrePersonne: '', focusSearch: false,
+  pendingDelete: null, showArchive: false, ideeGroupBy: 'priorite'
 };
+
+// Identité locale (stockée sur l'appareil, pas dans Firestore) pour signer les modifications.
+let moi = localStorage.getItem('carnet-utilisateur') || '';
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function euros(n){ return (Number(n)||0).toLocaleString('fr-FR') + ' €'; }
@@ -412,13 +493,114 @@ function migrateState(){
     if(p.epargne === undefined) p.epargne = 0;
     if(!p.priorite || !PRIORITIES.includes(p.priorite)) p.priorite = 'Peut-être';
     if(!p.notes) p.notes = [];
+    if(p.termine === undefined) p.termine = false;
   });
+}
+
+// --- Échéances ---------------------------------------------------------
+function joursRestants(echeanceStr){
+  if(!echeanceStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(echeanceStr + 'T00:00:00');
+  if(isNaN(target.getTime())) return null;
+  return Math.round((target - today) / 86400000);
+}
+function echeanceBadge(p){
+  if(p.termine) return '';
+  const objectif = Number(p.objectif)||0, epargne = Number(p.epargne)||0;
+  if(objectif > 0 && epargne >= objectif) return '';   // déjà financé, pas d'alerte
+  const j = joursRestants(p.echeance);
+  if(j === null) return '';
+  if(j < 0) return `<span class="deadline-badge late">En retard</span>`;
+  if(j === 0) return `<span class="deadline-badge late">Aujourd'hui</span>`;
+  if(j <= 45) return `<span class="deadline-badge soon">J-${j}</span>`;
+  return '';
+}
+
+// --- Célébration -------------------------------------------------------
+const CONFETTI_COLORS = ['#C98A2C','#3F7A6C','#4C86D9','#C97B87','#D9A441','#8E76AC'];
+function celebrer(){
+  const layer = document.getElementById('confetti-layer');
+  if(!layer) return;
+  for(let i=0;i<38;i++){
+    const bit = document.createElement('div');
+    bit.className = 'confetti-bit';
+    bit.style.left = Math.random()*100 + 'vw';
+    bit.style.top = '-20px';
+    bit.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    bit.style.animationDelay = (Math.random()*0.35) + 's';
+    bit.style.transform = `rotate(${Math.random()*360}deg)`;
+    layer.appendChild(bit);
+    setTimeout(()=>bit.remove(), 2600);
+  }
+}
+function estFinance(p){
+  const o = Number(p.objectif)||0, e = Number(p.epargne)||0;
+  return o > 0 && e >= o;
+}
+// Applique un changement de montant et fête l'événement si l'objectif vient d'être atteint.
+function majEpargne(p, nouvelleValeur){
+  const avant = estFinance(p);
+  p.epargne = Math.max(0, nouvelleValeur);
+  if(!avant && estFinance(p)) celebrer();
+  commit();
+}
+
+// --- Suppression avec confirmation -------------------------------------
+function cleSuppression(kind, id, parentId){
+  return [kind, parentId, id].filter(Boolean).join(':');
+}
+function boutonSuppression(kind, id, parentId){
+  const cle = cleSuppression(kind, id, parentId);
+  if(ui.pendingDelete === cle){
+    return `<button class="confirm-del" data-del-key="${cle}">Confirmer ?</button>`;
+  }
+  return `<button class="icon-btn ask-del" data-del-key="${cle}" title="Supprimer">${ICON_TRASH}</button>`;
+}
+function executerSuppression(cle){
+  const parts = cle.split(':');
+  const kind = parts[0];
+  if(kind === 'projet') state.projets = state.projets.filter(x=>x.id!==parts[1]);
+  else if(kind === 'vg') state.videGrenier = state.videGrenier.filter(x=>x.id!==parts[1]);
+  else if(kind === 'idee') state.idees = state.idees.filter(x=>x.id!==parts[1]);
+  else if(kind === 'activite') state.activites = state.activites.filter(x=>x.id!==parts[1]);
+  else if(kind === 'note'){
+    const proj = state.projets.find(x=>x.id===parts[1]);
+    if(proj) proj.notes = (proj.notes||[]).filter(n=>n.id!==parts[2]);
+  }
+  ui.pendingDelete = null;
+  commit();
+}
+
+// --- Divers ------------------------------------------------------------
+function ilYA(ts){
+  if(!ts) return '';
+  const sec = Math.floor((Date.now() - ts)/1000);
+  if(sec < 60) return "à l'instant";
+  const min = Math.floor(sec/60);
+  if(min < 60) return `il y a ${min} min`;
+  const h = Math.floor(min/60);
+  if(h < 24) return `il y a ${h} h`;
+  const j = Math.floor(h/24);
+  if(j === 1) return 'hier';
+  return `il y a ${j} jours`;
+}
+function telechargerSauvegarde(){
+  const contenu = JSON.stringify(state, null, 2);
+  const blob = new Blob([contenu], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `carnet-projets-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 let firstSnapshot = true;
 
 function subscribeState(){
   buildTabs();
+  initWhoami();
   setSyncStatus('connexion…');
   onSnapshot(docRef, { includeMetadataChanges: true }, (snap)=>{
     // On ignore l'écho local de nos propres écritures pas encore confirmées,
@@ -443,6 +625,8 @@ function subscribeState(){
 
 async function saveState(){
   try{
+    state.dernierAuteur = moi || '';
+    state.dernierChangement = Date.now();
     await setDoc(docRef, { state, updatedAt: Date.now() });
   }catch(e){
     console.error('Sauvegarde impossible', e);
@@ -450,6 +634,17 @@ async function saveState(){
   }
 }
 function commit(){ saveState(); renderAll(); }
+
+function initWhoami(){
+  const sel = document.getElementById('whoamiSelect');
+  if(!sel) return;
+  sel.innerHTML = `<option value="">Qui es-tu ?</option>` +
+    ['Marion','Nil'].map(p=>`<option value="${p}" ${p===moi?'selected':''}>${p}</option>`).join('');
+  sel.addEventListener('change', ()=>{
+    moi = sel.value;
+    localStorage.setItem('carnet-utilisateur', moi);
+  });
+}
 
 function buildTabs(){
   const tabsEl = document.getElementById('tabs');
@@ -463,7 +658,8 @@ function buildTabs(){
 }
 
 function totals(){
-  const attribue = state.projets.reduce((s,p)=>s+(Number(p.epargne)||0),0);
+  // Les projets terminés ne mobilisent plus d'argent : la dépense est déjà sortie de la réserve.
+  const attribue = state.projets.filter(p=>!p.termine).reduce((s,p)=>s+(Number(p.epargne)||0),0);
   const libre = state.reserveTotal - state.reserveSecurite - attribue;
   return { attribue, libre };
 }
@@ -478,6 +674,14 @@ function renderAll(){
   document.querySelector('.stat.safe .label').innerHTML = ICON_SHIELD + 'Gardé en sécurité';
 
   document.querySelectorAll('.tab').forEach(b=> b.classList.toggle('active', b.dataset.tab === ui.activeTab));
+
+  const authorEl = document.getElementById('authorNote');
+  if(authorEl){
+    if(state.dernierChangement){
+      const qui = state.dernierAuteur ? `par ${state.dernierAuteur} ` : '';
+      authorEl.textContent = `Dernière modification ${qui}${ilYA(state.dernierChangement)}`;
+    } else authorEl.textContent = '';
+  }
 
   const page = document.getElementById('page');
   if(ui.activeTab === 'reserves') page.innerHTML = renderReserves();
@@ -517,10 +721,14 @@ function renderReserves(){
       <span><i class="dot" style="background:var(--teal);"></i>Non attribué — ${euros(t.libre)}</span>
     </div>
     ${warn}
+    <div style="border-top:1.5px dashed var(--line); margin-top:6px; padding-top:14px;">
+      <p class="subtext" style="margin-bottom:8px;">Une copie de tout le carnet, à garder sur votre ordinateur au cas où.</p>
+      <button class="primary" id="btnExport" style="background:transparent; color:var(--ink); border:1.5px solid var(--line);">⬇ Télécharger une sauvegarde</button>
+    </div>
   </div>`;
 }
 
-function renderNote(n){
+function renderNote(n, projetId){
   let body;
   if(n.type==='Image'){
     body = `<img src="${escapeHtml(n.content)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span style="display:none;font-size:12px;color:var(--ink-soft);">Image introuvable</span>`;
@@ -531,7 +739,7 @@ function renderNote(n){
   }
   const icon = n.type==='Image'?ICON_IMAGE : n.type==='Lien'?ICON_LINK : ICON_NOTE_TEXT;
   return `<div class="note-item" data-note-id="${n.id}">
-    <div class="note-item-top"><span class="note-type-tag">${icon}${n.type}</span><button class="icon-btn del-note" title="Supprimer">${ICON_TRASH}</button></div>
+    <div class="note-item-top"><span class="note-type-tag">${icon}${n.type}</span>${boutonSuppression('note', n.id, projetId)}</div>
     <div class="note-body">${body}</div>
   </div>`;
 }
@@ -545,7 +753,7 @@ function renderEditPanel(p){
     <div class="field"><label>Échéance</label><input type="date" class="edit-echeance" value="${p.echeance||''}"></div>
     <div class="notes-section">
       <label>Notes, liens et images</label>
-      ${(p.notes&&p.notes.length) ? p.notes.map(n=>renderNote(n)).join('') : `<p class="subtext" style="margin:6px 0;">Aucune note pour l'instant.</p>`}
+      ${(p.notes&&p.notes.length) ? p.notes.map(n=>renderNote(n, p.id)).join('') : `<p class="subtext" style="margin:6px 0;">Aucune note pour l'instant.</p>`}
       <div class="add-note-form" data-selected-type="Texte">
         <div class="chip-row note-type-row">
           <button type="button" class="chip selected" data-notetype="Texte">${ICON_NOTE_TEXT}Texte</button>
@@ -572,13 +780,15 @@ function renderProjetCard(p, groupList){
   const notesCount = (p.notes||[]).length;
 
   return `
-  <div class="card ${funded?'funded':''}" style="border-left-color:${color}" data-id="${p.id}">
+  <div class="card ${funded?'funded':''} ${p.termine?'done-project':''}" style="border-left-color:${color}" data-id="${p.id}">
     <div class="card-top">
       <button class="card-icon-btn pic-toggle-btn" data-kind="projet" data-id="${p.id}" title="Changer le pictogramme">${emoji}</button>
       <div class="card-title-block">
         <div class="card-name-row">
           <div class="card-name">${escapeHtml(p.nom)}</div>
-          ${funded ? `<span class="funded-badge">${ICON_PIGGY} Financé</span>` : ''}
+          ${p.termine ? `<span class="funded-badge" style="animation:none; background:var(--ink-soft);">✓ Réalisé</span>`
+            : funded ? `<span class="funded-badge">${ICON_PIGGY} Financé</span>` : ''}
+          ${echeanceBadge(p)}
         </div>
         <div class="card-meta">
           <span class="person-pill" style="background:${color}">${p.personne}</span>
@@ -612,8 +822,9 @@ function renderProjetCard(p, groupList){
         <button class="step-btn amt-plus">+</button>
       </div>
       <div class="card-actions">
+        <button class="icon-btn toggle-termine" title="${p.termine?'Remettre en cours':'Marquer comme réalisé'}">${p.termine?ICON_UNDO:ICON_CHECK_CIRCLE}</button>
         <button class="icon-btn edit-projet ${expanded?'active':''}" title="Éditer">${ICON_EDIT}${notesCount?`<span class="notes-badge">${notesCount}</span>`:''}</button>
-        <button class="icon-btn del-projet" title="Supprimer">${ICON_TRASH}</button>
+        ${boutonSuppression('projet', p.id)}
       </div>
     </div>
     ${expanded ? renderEditPanel(p) : ''}
@@ -622,13 +833,55 @@ function renderProjetCard(p, groupList){
 
 function renderProjets(){
   const t = totals();
-  const list = state.projets;
+  const actifs = state.projets.filter(p=>!p.termine);
+  const termines = state.projets.filter(p=>p.termine);
+
+  // Vue d'ensemble : où en est l'ensemble des projets en cours ?
+  const totalObjectif = actifs.reduce((s,p)=>s+(Number(p.objectif)||0),0);
+  const totalEpargne = actifs.reduce((s,p)=>s+(Number(p.epargne)||0),0);
+  const pctGlobal = totalObjectif > 0 ? Math.min(100, (totalEpargne/totalObjectif)*100) : 0;
+  const nbFinances = actifs.filter(estFinance).length;
+  const resteAFinancer = Math.max(0, totalObjectif - totalEpargne);
+
+  const overview = actifs.length ? `
+    <div class="overview">
+      <div class="overview-top">
+        <span class="overview-title">Avancement global</span>
+        <span class="overview-amounts">${euros(totalEpargne)} <small>/ ${euros(totalObjectif)}</small></span>
+      </div>
+      <div class="overview-bar"><div class="overview-fill" style="width:${pctGlobal}%"></div></div>
+      <div class="overview-stats">
+        <span><b>${Math.round(pctGlobal)}%</b> atteint</span>
+        <span><b>${nbFinances}</b> financé${nbFinances>1?'s':''} sur ${actifs.length}</span>
+        <span>Reste <b>${euros(resteAFinancer)}</b></span>
+      </div>
+    </div>` : '';
+
+  // Recherche et filtre par personne
+  const q = ui.projetSearch.trim().toLowerCase();
+  const visibles = actifs.filter(p=>{
+    const okPersonne = !ui.projetFiltrePersonne || p.personne === ui.projetFiltrePersonne;
+    const okTexte = !q || p.nom.toLowerCase().includes(q) || (p.type||'').toLowerCase().includes(q);
+    return okPersonne && okTexte;
+  });
+
+  const barreOutils = actifs.length > 2 ? `
+    <div class="toolbar">
+      <input type="text" id="projetSearch" placeholder="Rechercher un projet…" value="${escapeHtml(ui.projetSearch)}">
+    </div>
+    <div class="filter-row">
+      <button class="filter-chip ${!ui.projetFiltrePersonne?'on':''}" data-filtre="" ${!ui.projetFiltrePersonne?'style="background:var(--ink)"':''}>Tous</button>
+      ${PERSONS.map(per=>`<button class="filter-chip ${ui.projetFiltrePersonne===per?'on':''}" data-filtre="${per}" ${ui.projetFiltrePersonne===per?`style="background:${PERSON_COLORS[per]}"`:''}>${per}</button>`).join('')}
+    </div>` : '';
+
   let body = '';
-  if(list.length === 0){
+  if(state.projets.length === 0){
     body = `<div class="empty"><span class="big">Pas encore de projet.</span>Ajoutez le premier ci-dessus.</div>`;
+  } else if(visibles.length === 0 && actifs.length > 0){
+    body = `<div class="empty"><span class="big">Aucun projet ne correspond.</span>Essayez un autre mot ou retirez le filtre.</div>`;
   } else {
     body = PRIORITIES.map(prio=>{
-      const groupItems = list.filter(p=>p.priorite===prio);
+      const groupItems = visibles.filter(p=>p.priorite===prio);
       if(groupItems.length === 0) return '';
       const groupIds = groupItems.map(p=>p.id);
       const style = PRIORITY_STYLES[prio];
@@ -641,13 +894,25 @@ function renderProjets(){
         </div>`;
     }).join('');
   }
+
+  // Projets réalisés, repliés par défaut pour ne pas encombrer la liste
+  const archive = termines.length ? `
+    <div class="archive-header" id="toggleArchive">
+      <span>✓ Projets réalisés (${termines.length})</span>
+      <span>${ui.showArchive ? '▲' : '▼'}</span>
+    </div>
+    ${ui.showArchive ? termines.map(p=>renderProjetCard(p, termines.map(x=>x.id))).join('') : ''}` : '';
+
   return `<div class="panel-anim">
     <div class="add-toggle">
-      <div><h2 class="section-title" style="margin-bottom:2px;">Vos projets</h2><p class="subtext" style="margin-bottom:0;">${list.length} projet${list.length>1?'s':''} · ${euros(t.attribue)} épargnés</p></div>
+      <div><h2 class="section-title" style="margin-bottom:2px;">Vos projets</h2><p class="subtext" style="margin-bottom:0;">${actifs.length} en cours · ${euros(t.attribue)} épargnés</p></div>
       <button class="primary" id="btnToggleAddProjet">${ui.showAddProjet ? 'Fermer' : '+ Ajouter'}</button>
     </div>
     ${ui.showAddProjet ? renderAddProjetForm() : ''}
+    ${overview}
+    ${barreOutils}
     ${body}
+    ${archive}
   </div>`;
 }
 
@@ -678,7 +943,7 @@ function renderVideGrenier(){
         <div class="vg-check ${v.trouve?'checked':''}">${v.trouve?ICON_CHECK:''}</div>
         <div class="vg-name">${escapeHtml(v.nom)}</div>
         <span class="person-pill" style="background:${color}">${v.personne}</span>
-        <button class="icon-btn del-vg" title="Supprimer">${ICON_TRASH}</button>
+        ${boutonSuppression('vg', v.id)}
       </div>`;
     }).join('');
   }
@@ -696,15 +961,22 @@ function renderVideGrenier(){
   </div>`;
 }
 
-function renderIdeeCard(idee, accent){
+function renderIdeeCard(idee, accent, categories){
   const emoji = idee.emoji || pickEmoji(idee.nom, '💡');
+  const ouvert = ui.expandedIdees.has(idee.id);
   return `<div class="idea-card-wrap">
     <div class="idea-card" style="border-left-color:${accent}" data-id="${idee.id}">
       <button class="idea-icon-btn pic-toggle-btn" data-kind="idee" data-id="${idee.id}" title="Changer le pictogramme">${emoji}</button>
       <div class="idea-body"><div class="idea-name">${escapeHtml(idee.nom)}</div>${idee.categorie ? `<span class="category-tag">${escapeHtml(idee.categorie)}</span>` : ''}</div>
-      <button class="icon-btn del-idee" data-id="${idee.id}">${ICON_TRASH}</button>
+      <button class="icon-btn edit-idee ${ouvert?'active':''}" data-id="${idee.id}" title="Éditer">${ICON_EDIT}</button>
+      ${boutonSuppression('idee', idee.id)}
     </div>
     ${renderEmojiPicker('idee', idee.id, idee.emoji)}
+    ${ouvert ? `<div class="edit-panel" data-edit-idee="${idee.id}" style="margin-top:8px; padding:12px; background:var(--paper-dim); border:1.5px dashed var(--line); border-radius:10px; border-top:1.5px dashed var(--line);">
+      <div class="field"><label>Nom</label><input type="text" class="ei-nom" value="${escapeHtml(idee.nom)}"></div>
+      <div class="field"><label>Catégorie</label><input type="text" class="ei-categorie" list="cats-${idee.personne}" value="${escapeHtml(idee.categorie||'')}"></div>
+      <div class="field" style="margin-bottom:0;"><label>Priorité</label><div class="chip-row ei-prio-row">${SIMPLE_PRIORITIES.map(pr=>`<button type="button" class="chip ${pr===idee.priorite?'selected':''}" data-prio="${pr}">${pr}</button>`).join('')}</div></div>
+    </div>` : ''}
   </div>`;
 }
 
@@ -724,32 +996,52 @@ function renderIdees(personne){
   const list = state.idees.filter(i=>i.personne===personne);
   const styles = IDEA_PRIORITY_STYLES[personne];
   const accent = PERSON_COLORS[personne];
-  const categories = [...new Set(list.map(i=>i.categorie).filter(Boolean))];
+  const categories = [...new Set(list.map(i=>i.categorie).filter(Boolean))].sort();
 
   let body = '';
   if(list.length===0){
     body = `<div class="empty"><span class="big">Pas encore d'idée pour ${personne}.</span>Ajoutez-en une ci-dessus.</div>`;
+  } else if(ui.ideeGroupBy === 'categorie'){
+    // Regroupement par catégorie personnalisée
+    const groupes = [...categories, null];
+    body = groupes.map(cat=>{
+      const items = list.filter(i=> cat ? i.categorie===cat : !i.categorie);
+      if(items.length===0) return '';
+      const titre = cat || 'Sans catégorie';
+      const cards = items.map(i=>renderIdeeCard(i, accent, categories)).join('');
+      return `<div class="prio-section"><div class="prio-header" style="background:${accent};color:#fff"><span class="prio-name">${escapeHtml(titre)}</span><span class="prio-count">${items.length}</span></div>${cards}</div>`;
+    }).join('');
   } else {
     body = SIMPLE_PRIORITIES.map(prio=>{
       const items = list.filter(i=>i.priorite===prio);
       if(items.length===0) return '';
       const st = styles[prio];
-      const cards = items.map(i=>renderIdeeCard(i, accent)).join('');
+      const cards = items.map(i=>renderIdeeCard(i, accent, categories)).join('');
       return `<div class="prio-section"><div class="prio-header" style="background:${st.bg};color:${st.text}"><span class="prio-name">${prio}</span><span class="prio-count">${items.length}</span></div>${cards}</div>`;
     }).join('');
   }
+
+  const bascule = list.length > 1 ? `
+    <div class="filter-row">
+      <button class="filter-chip ${ui.ideeGroupBy!=='categorie'?'on':''}" data-groupby="priorite" ${ui.ideeGroupBy!=='categorie'?`style="background:${accent}"`:''}>Par priorité</button>
+      <button class="filter-chip ${ui.ideeGroupBy==='categorie'?'on':''}" data-groupby="categorie" ${ui.ideeGroupBy==='categorie'?`style="background:${accent}"`:''}>Par catégorie</button>
+    </div>` : '';
+
   return `<div class="panel-anim">
     <div class="add-toggle">
       <div><h2 class="section-title" style="margin-bottom:2px;">Idées de ${personne}</h2><p class="subtext" style="margin-bottom:0;">${list.length} idée${list.length>1?'s':''}</p></div>
       <button class="primary" id="btnToggleAddIdee">${ui.showAddIdee?'Fermer':'+ Ajouter'}</button>
     </div>
+    <datalist id="cats-${personne}">${categories.map(c=>`<option value="${escapeHtml(c)}">`).join('')}</datalist>
     ${ui.showAddIdee ? renderAddIdeeForm(personne, categories) : ''}
+    ${bascule}
     ${body}
   </div>`;
 }
 
 function renderActiviteCard(a){
   const emoji = a.emoji || pickEmoji(a.nom, '📍');
+  const ouvert = ui.expandedActivites.has(a.id);
   return `<div class="activity-card-wrap">
     <div class="activity-card ${a.fait?'done':''}" data-id="${a.id}">
       <div class="activity-check ${a.fait?'checked':''}">${a.fait?ICON_CHECK:''}</div>
@@ -761,9 +1053,18 @@ function renderActiviteCard(a){
           ${a.lien ? `<a href="${escapeHtml(a.lien)}" target="_blank" rel="noopener noreferrer" class="act-link">${ICON_LINK}Voir le lien</a>`:''}
         </div>
       </div>
-      <button class="icon-btn del-activite" data-id="${a.id}">${ICON_TRASH}</button>
+      <button class="icon-btn edit-activite ${ouvert?'active':''}" data-id="${a.id}" title="Éditer">${ICON_EDIT}</button>
+      ${boutonSuppression('activite', a.id)}
     </div>
     ${renderEmojiPicker('activite', a.id, a.emoji)}
+    ${ouvert ? `<div class="edit-panel" data-edit-activite="${a.id}" style="margin-top:8px; padding:12px; background:var(--paper-dim); border:1.5px dashed var(--line); border-radius:10px; border-top:1.5px dashed var(--line);">
+      <div class="field"><label>Nom</label><input type="text" class="ea-nom" value="${escapeHtml(a.nom)}"></div>
+      <div class="row2">
+        <div class="field"><label>Lien</label><input type="url" class="ea-lien" value="${escapeHtml(a.lien||'')}" placeholder="https://..."></div>
+        <div class="field"><label>Emplacement</label><input type="text" class="ea-lieu" value="${escapeHtml(a.emplacement||'')}"></div>
+      </div>
+      <div class="field" style="margin-bottom:0;"><label>Priorité</label><div class="chip-row ea-prio-row">${SIMPLE_PRIORITIES.map(pr=>`<button type="button" class="chip ${pr===a.priorite?'selected':''}" data-prio="${pr}">${pr}</button>`).join('')}</div></div>
+    </div>` : ''}
   </div>`;
 }
 
@@ -805,7 +1106,12 @@ function renderActivites(){
 
 function moveWithinPriority(id, direction){
   const proj = state.projets.find(p=>p.id===id);
-  const groupIds = state.projets.filter(p=>p.priorite===proj.priorite).map(p=>p.id);
+  if(!proj) return;
+  // On ne réorganise qu'entre projets du même statut (en cours / réalisés)
+  // et de même priorité, pour que les flèches correspondent à ce qui est affiché.
+  const groupIds = state.projets
+    .filter(p=>p.priorite===proj.priorite && !!p.termine === !!proj.termine)
+    .map(p=>p.id);
   const posInGroup = groupIds.indexOf(id);
   const targetPos = posInGroup + direction;
   if(targetPos < 0 || targetPos >= groupIds.length) return;
@@ -817,6 +1123,14 @@ function moveWithinPriority(id, direction){
 }
 
 function attachPageEvents(){
+  // Suppression en deux temps : premier clic = demande, second = confirmation
+  document.querySelectorAll('.ask-del').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ ui.pendingDelete = btn.dataset.delKey; renderAll(); });
+  });
+  document.querySelectorAll('.confirm-del').forEach(btn=>{
+    btn.addEventListener('click', ()=> executerSuppression(btn.dataset.delKey));
+  });
+
   // Sélecteur de pictogramme (projets, idées, activités)
   document.querySelectorAll('.pic-toggle-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -843,6 +1157,19 @@ function attachPageEvents(){
   const inpSecu = document.getElementById('inpSecu');
   if(inpTotal) inpTotal.addEventListener('change', e=>{ state.reserveTotal = Number(e.target.value)||0; commit(); });
   if(inpSecu) inpSecu.addEventListener('change', e=>{ state.reserveSecurite = Number(e.target.value)||0; commit(); });
+  const btnExport = document.getElementById('btnExport');
+  if(btnExport) btnExport.addEventListener('click', telechargerSauvegarde);
+
+  // Recherche et filtres de projets
+  const searchEl = document.getElementById('projetSearch');
+  if(searchEl) searchEl.addEventListener('input', e=>{
+    ui.projetSearch = e.target.value; ui.focusSearch = true; renderAll();
+  });
+  document.querySelectorAll('[data-filtre]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ ui.projetFiltrePersonne = btn.dataset.filtre; renderAll(); });
+  });
+  const toggleArchive = document.getElementById('toggleArchive');
+  if(toggleArchive) toggleArchive.addEventListener('click', ()=>{ ui.showArchive = !ui.showArchive; renderAll(); });
 
   // Projets : ajout
   const btnToggleAddProjet = document.getElementById('btnToggleAddProjet');
@@ -881,11 +1208,25 @@ function attachPageEvents(){
     if(up) up.addEventListener('click', ()=> moveWithinPriority(id, -1));
     if(down) down.addEventListener('click', ()=> moveWithinPriority(id, 1));
 
-    card.querySelector('.amt-minus').addEventListener('click', ()=>{ proj.epargne = Math.max(0, (Number(proj.epargne)||0) - 10); commit(); });
-    card.querySelector('.amt-plus').addEventListener('click', ()=>{ proj.epargne = (Number(proj.epargne)||0) + 10; commit(); });
-    card.querySelector('.amt-input').addEventListener('change', e=>{ proj.epargne = Math.max(0, Number(e.target.value)||0); commit(); });
-    card.querySelector('.objectif-input').addEventListener('change', e=>{ proj.objectif = Math.max(0, Number(e.target.value)||0); commit(); });
-    card.querySelector('.del-projet').addEventListener('click', ()=>{ state.projets.splice(idx,1); commit(); });
+    card.querySelector('.amt-minus').addEventListener('click', ()=>{ majEpargne(proj, (Number(proj.epargne)||0) - 10); });
+    card.querySelector('.amt-plus').addEventListener('click', ()=>{ majEpargne(proj, (Number(proj.epargne)||0) + 10); });
+    card.querySelector('.amt-input').addEventListener('change', e=>{ majEpargne(proj, Number(e.target.value)||0); });
+    card.querySelector('.objectif-input').addEventListener('change', e=>{
+      const avant = estFinance(proj);
+      proj.objectif = Math.max(0, Number(e.target.value)||0);
+      if(!avant && estFinance(proj)) celebrer();
+      commit();
+    });
+
+    const btnTermine = card.querySelector('.toggle-termine');
+    if(btnTermine) btnTermine.addEventListener('click', ()=>{
+      // Un projet réalisé sort de la réserve : l'argent a été dépensé.
+      // L'opération est réversible et laisse le "non attribué" inchangé.
+      const montant = Number(proj.epargne) || 0;
+      if(proj.termine){ proj.termine = false; state.reserveTotal += montant; }
+      else { proj.termine = true; state.reserveTotal = Math.max(0, state.reserveTotal - montant); }
+      commit();
+    });
 
     const editBtn = card.querySelector('.edit-projet');
     if(editBtn) editBtn.addEventListener('click', ()=>{
@@ -902,14 +1243,6 @@ function attachPageEvents(){
       editPanel.querySelectorAll('.edit-prio-row .chip').forEach(chip=> chip.addEventListener('click', ()=>{ proj.priorite = chip.dataset.prio; commit(); }));
       const editEcheance = editPanel.querySelector('.edit-echeance');
       if(editEcheance) editEcheance.addEventListener('change', e=>{ proj.echeance = e.target.value; commit(); });
-
-      editPanel.querySelectorAll('.del-note').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const noteId = btn.closest('.note-item').dataset.noteId;
-          proj.notes = (proj.notes||[]).filter(n=>n.id!==noteId);
-          commit();
-        });
-      });
 
       const addNoteForm = editPanel.querySelector('.add-note-form');
       if(addNoteForm){
@@ -953,13 +1286,15 @@ function attachPageEvents(){
     const id = item.dataset.id;
     const idx = state.videGrenier.findIndex(v=>v.id===id);
     item.querySelector('.vg-check').addEventListener('click', ()=>{ state.videGrenier[idx].trouve = !state.videGrenier[idx].trouve; commit(); });
-    item.querySelector('.del-vg').addEventListener('click', ()=>{ state.videGrenier.splice(idx,1); commit(); });
   });
 
   // Idées
   const btnToggleAddIdee = document.getElementById('btnToggleAddIdee');
   if(btnToggleAddIdee) btnToggleAddIdee.addEventListener('click', ()=>{ ui.showAddIdee=!ui.showAddIdee; renderAll(); });
   document.querySelectorAll('#ideePrioRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newIdeePriorite=chip.dataset.prio; renderAll(); }));
+  document.querySelectorAll('[data-groupby]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ ui.ideeGroupBy = btn.dataset.groupby; renderAll(); });
+  });
   const btnSaveIdee = document.getElementById('btnSaveIdee');
   if(btnSaveIdee) btnSaveIdee.addEventListener('click', ()=>{
     const nom = document.getElementById('ideeNom').value.trim();
@@ -970,12 +1305,19 @@ function attachPageEvents(){
     ui.showAddIdee = false;
     commit();
   });
-  document.querySelectorAll('.del-idee').forEach(btn=>{
+  document.querySelectorAll('.edit-idee').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const id = btn.dataset.id;
-      state.idees = state.idees.filter(i=>i.id!==id);
-      commit();
+      if(ui.expandedIdees.has(id)) ui.expandedIdees.delete(id); else ui.expandedIdees.add(id);
+      renderAll();
     });
+  });
+  document.querySelectorAll('[data-edit-idee]').forEach(panel=>{
+    const idee = state.idees.find(i=>i.id===panel.dataset.editIdee);
+    if(!idee) return;
+    panel.querySelector('.ei-nom').addEventListener('change', e=>{ const v=e.target.value.trim(); if(v){ idee.nom=v; commit(); } });
+    panel.querySelector('.ei-categorie').addEventListener('change', e=>{ idee.categorie = e.target.value.trim(); commit(); });
+    panel.querySelectorAll('.ei-prio-row .chip').forEach(chip=> chip.addEventListener('click', ()=>{ idee.priorite = chip.dataset.prio; commit(); }));
   });
 
   // Activités
@@ -996,8 +1338,29 @@ function attachPageEvents(){
     const id = card.dataset.id;
     const idx = state.activites.findIndex(a=>a.id===id);
     card.querySelector('.activity-check').addEventListener('click', ()=>{ state.activites[idx].fait = !state.activites[idx].fait; commit(); });
-    card.querySelector('.del-activite').addEventListener('click', ()=>{ state.activites.splice(idx,1); commit(); });
   });
+  document.querySelectorAll('.edit-activite').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.id;
+      if(ui.expandedActivites.has(id)) ui.expandedActivites.delete(id); else ui.expandedActivites.add(id);
+      renderAll();
+    });
+  });
+  document.querySelectorAll('[data-edit-activite]').forEach(panel=>{
+    const act = state.activites.find(a=>a.id===panel.dataset.editActivite);
+    if(!act) return;
+    panel.querySelector('.ea-nom').addEventListener('change', e=>{ const v=e.target.value.trim(); if(v){ act.nom=v; commit(); } });
+    panel.querySelector('.ea-lien').addEventListener('change', e=>{ act.lien = e.target.value.trim(); commit(); });
+    panel.querySelector('.ea-lieu').addEventListener('change', e=>{ act.emplacement = e.target.value.trim(); commit(); });
+    panel.querySelectorAll('.ea-prio-row .chip').forEach(chip=> chip.addEventListener('click', ()=>{ act.priorite = chip.dataset.prio; commit(); }));
+  });
+
+  // Garde le curseur dans la barre de recherche pendant la frappe
+  if(ui.focusSearch){
+    const s = document.getElementById('projetSearch');
+    if(s){ s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+    ui.focusSearch = false;
+  }
 }
 
 subscribeState();
