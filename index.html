@@ -300,6 +300,80 @@
   }
   .whoami select option{ color:var(--ink); }
 
+  /* Liste de courses */
+  .quick-add{ background:var(--paper-dim); border:1.5px dashed var(--line); border-radius:11px; padding:12px; margin-bottom:18px; }
+  .quick-add-row{ display:flex; gap:7px; }
+  .quick-add-row input{ padding:9px 12px; border-radius:9px; }
+  .quick-add-row .qte-input{ width:66px; flex-shrink:0; text-align:center; }
+  .quick-add-row button{ flex-shrink:0; width:44px; padding:0; font-size:20px; line-height:1; border-radius:9px; }
+
+  .course-section{ margin-bottom:20px; }
+  .course-head{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:8px 13px; border-radius:9px; margin-bottom:9px; color:#fff;
+  }
+  .course-head-title{ font-family:'Fraunces',serif; font-weight:600; font-size:15px; }
+  .course-head-count{ font-size:11.5px; opacity:.85; }
+  .course-item{
+    display:flex; align-items:center; gap:10px; background:#fff;
+    border:1.5px solid var(--line); border-radius:9px; padding:9px 11px; margin-bottom:7px;
+    transition: opacity .25s ease, background .25s ease, transform .15s ease;
+  }
+  @media (hover:hover){ .course-item:hover{ transform:translateX(2px); border-color:var(--ink); } }
+  .course-item.taken{ opacity:.5; background:var(--paper-dim); }
+  .course-item.taken .course-name{ text-decoration:line-through; }
+  .course-check{
+    width:22px; height:22px; border-radius:50%; border:2px solid var(--ink-soft); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; background:#fff;
+    transition: background .2s ease, border-color .2s ease, transform .18s ease;
+  }
+  .course-check:active{ transform:scale(.85); }
+  .course-check.checked{ background:var(--teal); border-color:var(--teal); animation: popCheck .3s ease; }
+  .course-check svg{ width:13px; height:13px; color:#fff; }
+  @keyframes popCheck{ 0%{transform:scale(.6);} 55%{transform:scale(1.2);} 100%{transform:scale(1);} }
+  .course-emoji{ font-size:19px; flex-shrink:0; }
+  .course-name{ flex:1; font-size:14.5px; min-width:0; word-break:break-word; }
+  .course-qte{
+    font-size:11.5px; font-weight:600; color:var(--ink-soft); background:var(--paper-dim);
+    border-radius:20px; padding:2px 9px; flex-shrink:0;
+  }
+
+  /* Entrée échelonnée des éléments, uniquement au changement d'onglet */
+  @keyframes cardIn{ from{opacity:0; transform:translateY(9px);} to{opacity:1; transform:translateY(0);} }
+  .panel-anim .card,
+  .panel-anim .idea-card-wrap,
+  .panel-anim .activity-card-wrap,
+  .panel-anim .vg-item,
+  .panel-anim .course-item{
+    animation: cardIn .4s cubic-bezier(.2,.8,.3,1) backwards;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+  .panel-anim .prio-header, .panel-anim .course-head, .panel-anim .overview{
+    animation: cardIn .38s cubic-bezier(.2,.8,.3,1) backwards;
+  }
+
+  /* Pulsation du chiffre quand le montant change */
+  @keyframes bumpValue{ 0%{transform:scale(1);} 45%{transform:scale(1.12);} 100%{transform:scale(1);} }
+  .stat .value.bump{ animation: bumpValue .42s cubic-bezier(.3,1.4,.5,1); }
+  .stat{ transition: transform .18s ease, box-shadow .18s ease; }
+  @media (hover:hover){ .stat:hover{ transform:translateY(-1px); box-shadow:4px 5px 0 rgba(0,0,0,0.2); } }
+
+  /* Reflet animé sur les jauges terminées */
+  @keyframes shimmer{ 0%{ background-position:-160% 0; } 100%{ background-position:260% 0; } }
+  .card.funded .progress-bar-outer::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(100deg, transparent 38%, rgba(255,255,255,.55) 50%, transparent 62%);
+    background-size:220% 100%; animation: shimmer 2.8s ease-in-out infinite;
+  }
+  .overview-fill{ position:relative; overflow:hidden; }
+  .overview-fill::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(100deg, transparent 40%, rgba(255,255,255,.35) 50%, transparent 60%);
+    background-size:220% 100%; animation: shimmer 3.4s ease-in-out infinite;
+  }
+
+  .empty .emoji-big{ font-size:34px; display:block; margin-bottom:6px; opacity:.75; }
+
   .sync-note{ text-align:center; font-size:11.5px; color:rgba(251,243,228,0.55); margin-top:16px; }
 </style>
 </head>
@@ -376,10 +450,15 @@ const IDEA_PRIORITY_STYLES = {
 const TABS = [
   {id:'reserves', label:'Réserves', emoji:'💰'},
   {id:'projets', label:'Projets', emoji:'🎯'},
+  {id:'courses', label:'Courses', emoji:'🛒', accent:'#6E8F4E'},
   {id:'ideesMarion', label:'Idées Marion', emoji:'💗', accent:PERSON_COLORS.Marion},
   {id:'ideesNil', label:'Idées Nil', emoji:'💙', accent:PERSON_COLORS.Nil},
   {id:'activites', label:'Activités', emoji:'🗺️'},
   {id:'videgrenier', label:'Vide-grenier', emoji:'🔍'}
+];
+const COURSE_SECTIONS = [
+  {id:'Maison', emoji:'🏠', couleur:'#6E8F4E'},
+  {id:'Brico',  emoji:'🔨', couleur:'#B5763C'}
 ];
 
 const EMOJI_RULES = [
@@ -397,7 +476,21 @@ const EMOJI_RULES = [
   [/maison|appartement|logement/i, '🏠'], [/randonn[ée]e|balade|marche/i, '🥾'], [/restaurant|resto\b/i, '🍽️'],
   [/cin[ée]ma|film/i, '🎬'], [/concert/i, '🎤'], [/mus[ée]e|expo/i, '🖼️'], [/plage/i, '🏖️'], [/ski\b/i, '⛷️'],
   [/escalade/i, '🧗'], [/zoo/i, '🦁'], [/th[ée][aâ]tre|spectacle/i, '🎭'], [/v[êe]tement|robe|pantalon|chaussure/i, '👕'],
-  [/bijou|montre/i, '💎']
+  [/bijou|montre/i, '💎'],
+  // Courses alimentaires
+  [/lait\b/i,'🥛'], [/pain\b|baguette/i,'🥖'], [/oeuf|œuf/i,'🥚'], [/fromage/i,'🧀'],
+  [/pomme|fruit/i,'🍎'], [/l[ée]gume|salade|carotte|brocoli/i,'🥦'], [/viande|steak|poulet/i,'🥩'],
+  [/poisson|saumon/i,'🐟'], [/p[âa]tes|spaghetti/i,'🍝'], [/riz\b/i,'🍚'], [/caf[ée]\b/i,'☕'],
+  [/th[ée]\b/i,'🍵'], [/yaourt/i,'🥣'], [/beurre/i,'🧈'], [/chocolat/i,'🍫'], [/sucre|farine/i,'🥣'],
+  [/eau\b|bouteille/i,'💧'], [/vin\b|bi[èe]re/i,'🍷'],
+  // Entretien et bricolage
+  [/papier toilette|essuie/i,'🧻'], [/lessive|savon|nettoyant|produit m[ée]nager/i,'🧼'],
+  [/[ée]ponge/i,'🧽'], [/sac poubelle|poubelle/i,'🗑️'],
+  [/vis\b|boulon|cheville/i,'🔩'], [/clou|marteau/i,'🔨'], [/bois|planche|tasseau/i,'🪵'],
+  [/ampoule/i,'💡'], [/c[âa]ble|fil [ée]lectrique|prise\b/i,'🔌'], [/colle\b|silicone|mastic/i,'🧴'],
+  [/ciment|b[ée]ton|pl[âa]tre|enduit/i,'🧱'], [/tuyau|plomberie|joint\b/i,'🚰'],
+  [/gants|masque|protection/i,'🧤'], [/pinceau|rouleau/i,'🖌️'], [/perceuse|scie|ponceuse|visseuse/i,'🛠️'],
+  [/terreau|graines|plante/i,'🪴']
 ];
 function pickEmoji(nom, fallback){
   for(const [re, emoji] of EMOJI_RULES){ if(re.test(nom)) return emoji; }
@@ -437,7 +530,7 @@ const ICON_CHECK_CIRCLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentC
 const ICON_UNDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h11a5 5 0 010 10h-6"/><path d="M7.5 5.5L4 9l3.5 3.5"/></svg>';
 const ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>';
 
-let state = { reserveTotal: 0, reserveSecurite: 0, projets: [], videGrenier: [], idees: [], activites: [] };
+let state = { reserveTotal: 0, reserveSecurite: 0, projets: [], videGrenier: [], idees: [], activites: [], courses: [] };
 let ui = {
   activeTab: 'reserves', showAddProjet: false, showAddVG: false, showAddIdee: false, showAddActivite: false,
   newProjetPersonne: PERSONS[0], newProjetType: TYPES[0], newProjetPriorite: 'Peut-être',
@@ -445,7 +538,8 @@ let ui = {
   expandedProjects: new Set(), emojiPickerOpen: new Set(),
   expandedIdees: new Set(), expandedActivites: new Set(),
   projetSearch: '', projetFiltrePersonne: '', focusSearch: false,
-  pendingDelete: null, showArchive: false, ideeGroupBy: 'priorite'
+  pendingDelete: null, showArchive: false, ideeGroupBy: 'priorite',
+  courseSection: 'Maison', focusCourse: false, animateTab: true
 };
 
 // Identité locale (stockée sur l'appareil, pas dans Firestore) pour signer les modifications.
@@ -488,6 +582,7 @@ function migrateState(){
   if(!state.videGrenier) state.videGrenier = [];
   if(!state.idees) state.idees = [];
   if(!state.activites) state.activites = [];
+  if(!state.courses) state.courses = [];
   state.projets.forEach(p=>{
     if(p.objectif === undefined){ p.objectif = Number(p.montant) || 0; p.epargne = Number(p.montant) || 0; delete p.montant; }
     if(p.epargne === undefined) p.epargne = 0;
@@ -564,6 +659,7 @@ function executerSuppression(cle){
   else if(kind === 'vg') state.videGrenier = state.videGrenier.filter(x=>x.id!==parts[1]);
   else if(kind === 'idee') state.idees = state.idees.filter(x=>x.id!==parts[1]);
   else if(kind === 'activite') state.activites = state.activites.filter(x=>x.id!==parts[1]);
+  else if(kind === 'course') state.courses = state.courses.filter(x=>x.id!==parts[1]);
   else if(kind === 'note'){
     const proj = state.projets.find(x=>x.id===parts[1]);
     if(proj) proj.notes = (proj.notes||[]).filter(n=>n.id!==parts[2]);
@@ -653,6 +749,8 @@ function buildTabs(){
     const btn = e.target.closest('.tab');
     if(!btn) return;
     ui.activeTab = btn.dataset.tab;
+    ui.animateTab = true;
+    ui.pendingDelete = null;
     renderAll();
   });
 }
@@ -667,8 +765,15 @@ function totals(){
 function renderAll(){
   const t = totals();
   const freeEl = document.getElementById('statFree');
+  const freeValueEl = freeEl.querySelector('.value');
+  const nouvelleValeur = euros(t.libre);
+  if(freeValueEl.textContent !== '—' && freeValueEl.textContent !== nouvelleValeur){
+    freeValueEl.classList.remove('bump');
+    void freeValueEl.offsetWidth;      // force le redémarrage de l'animation
+    freeValueEl.classList.add('bump');
+  }
   freeEl.classList.toggle('negative', t.libre < 0);
-  freeEl.querySelector('.value').textContent = euros(t.libre);
+  freeValueEl.textContent = nouvelleValeur;
   freeEl.querySelector('.label').innerHTML = ICON_COIN + 'Non attribué';
   document.getElementById('statSafe').textContent = euros(state.reserveSecurite);
   document.querySelector('.stat.safe .label').innerHTML = ICON_SHIELD + 'Gardé en sécurité';
@@ -686,10 +791,18 @@ function renderAll(){
   const page = document.getElementById('page');
   if(ui.activeTab === 'reserves') page.innerHTML = renderReserves();
   else if(ui.activeTab === 'projets') page.innerHTML = renderProjets();
+  else if(ui.activeTab === 'courses') page.innerHTML = renderCourses();
   else if(ui.activeTab === 'ideesMarion') page.innerHTML = renderIdees('Marion');
   else if(ui.activeTab === 'ideesNil') page.innerHTML = renderIdees('Nil');
   else if(ui.activeTab === 'activites') page.innerHTML = renderActivites();
   else page.innerHTML = renderVideGrenier();
+
+  // L'animation d'entrée ne joue qu'au changement d'onglet : pendant l'édition,
+  // la page se met à jour sans rejouer l'animation à chaque frappe.
+  if(ui.animateTab && page.firstElementChild){
+    page.firstElementChild.classList.add('panel-anim');
+    ui.animateTab = false;
+  }
 
   attachPageEvents();
 }
@@ -703,7 +816,7 @@ function renderReserves(){
   let warn = '';
   if(t.libre < 0) warn = `<div class="warn">Vous avez épargné ${euros(Math.abs(t.libre))} de plus que ce que vous avez en réserve.</div>`;
 
-  return `<div class="panel-anim">
+  return `<div class="tab-panel">
     <h2 class="section-title">Combien avez-vous de côté ?</h2>
     <p class="subtext">Indiquez le total mis de côté, et la part que vous voulez garder en sécurité, à l'abri de tout projet.</p>
     <div class="row2">
@@ -780,7 +893,7 @@ function renderProjetCard(p, groupList){
   const notesCount = (p.notes||[]).length;
 
   return `
-  <div class="card ${funded?'funded':''} ${p.termine?'done-project':''}" style="border-left-color:${color}" data-id="${p.id}">
+  <div class="card ${funded?'funded':''} ${p.termine?'done-project':''}" style="border-left-color:${color}; --i:${Math.max(0,posInGroup)}" data-id="${p.id}">
     <div class="card-top">
       <button class="card-icon-btn pic-toggle-btn" data-kind="projet" data-id="${p.id}" title="Changer le pictogramme">${emoji}</button>
       <div class="card-title-block">
@@ -903,7 +1016,7 @@ function renderProjets(){
     </div>
     ${ui.showArchive ? termines.map(p=>renderProjetCard(p, termines.map(x=>x.id))).join('') : ''}` : '';
 
-  return `<div class="panel-anim">
+  return `<div class="tab-panel">
     <div class="add-toggle">
       <div><h2 class="section-title" style="margin-bottom:2px;">Vos projets</h2><p class="subtext" style="margin-bottom:0;">${actifs.length} en cours · ${euros(t.attribue)} épargnés</p></div>
       <button class="primary" id="btnToggleAddProjet">${ui.showAddProjet ? 'Fermer' : '+ Ajouter'}</button>
@@ -937,9 +1050,9 @@ function renderVideGrenier(){
   if(list.length === 0){
     items = `<div class="empty"><span class="big">Rien sur la liste.</span>Notez ce que vous cherchez pour votre prochaine chine.</div>`;
   } else {
-    items = list.map(v=>{
+    items = list.map((v,ix)=>{
       const color = PERSON_COLORS[v.personne] || '#8A8172';
-      return `<div class="vg-item ${v.trouve?'done':''}" data-id="${v.id}">
+      return `<div class="vg-item ${v.trouve?'done':''}" data-id="${v.id}" style="--i:${ix}">
         <div class="vg-check ${v.trouve?'checked':''}">${v.trouve?ICON_CHECK:''}</div>
         <div class="vg-name">${escapeHtml(v.nom)}</div>
         <span class="person-pill" style="background:${color}">${v.personne}</span>
@@ -947,7 +1060,7 @@ function renderVideGrenier(){
       </div>`;
     }).join('');
   }
-  return `<div class="panel-anim">
+  return `<div class="tab-panel">
     <div class="add-toggle">
       <div><h2 class="section-title" style="margin-bottom:2px;">Vide-grenier</h2><p class="subtext" style="margin-bottom:0;">Ce qu'on cherche pour la prochaine chine</p></div>
       <button class="primary" id="btnToggleAddVG">${ui.showAddVG ? 'Fermer' : '+ Ajouter'}</button>
@@ -961,10 +1074,10 @@ function renderVideGrenier(){
   </div>`;
 }
 
-function renderIdeeCard(idee, accent, categories){
+function renderIdeeCard(idee, accent, categories, index){
   const emoji = idee.emoji || pickEmoji(idee.nom, '💡');
   const ouvert = ui.expandedIdees.has(idee.id);
-  return `<div class="idea-card-wrap">
+  return `<div class="idea-card-wrap" style="--i:${index||0}">
     <div class="idea-card" style="border-left-color:${accent}" data-id="${idee.id}">
       <button class="idea-icon-btn pic-toggle-btn" data-kind="idee" data-id="${idee.id}" title="Changer le pictogramme">${emoji}</button>
       <div class="idea-body"><div class="idea-name">${escapeHtml(idee.nom)}</div>${idee.categorie ? `<span class="category-tag">${escapeHtml(idee.categorie)}</span>` : ''}</div>
@@ -1008,7 +1121,7 @@ function renderIdees(personne){
       const items = list.filter(i=> cat ? i.categorie===cat : !i.categorie);
       if(items.length===0) return '';
       const titre = cat || 'Sans catégorie';
-      const cards = items.map(i=>renderIdeeCard(i, accent, categories)).join('');
+      const cards = items.map((i,ix)=>renderIdeeCard(i, accent, categories, ix)).join('');
       return `<div class="prio-section"><div class="prio-header" style="background:${accent};color:#fff"><span class="prio-name">${escapeHtml(titre)}</span><span class="prio-count">${items.length}</span></div>${cards}</div>`;
     }).join('');
   } else {
@@ -1016,7 +1129,7 @@ function renderIdees(personne){
       const items = list.filter(i=>i.priorite===prio);
       if(items.length===0) return '';
       const st = styles[prio];
-      const cards = items.map(i=>renderIdeeCard(i, accent, categories)).join('');
+      const cards = items.map((i,ix)=>renderIdeeCard(i, accent, categories, ix)).join('');
       return `<div class="prio-section"><div class="prio-header" style="background:${st.bg};color:${st.text}"><span class="prio-name">${prio}</span><span class="prio-count">${items.length}</span></div>${cards}</div>`;
     }).join('');
   }
@@ -1027,7 +1140,7 @@ function renderIdees(personne){
       <button class="filter-chip ${ui.ideeGroupBy==='categorie'?'on':''}" data-groupby="categorie" ${ui.ideeGroupBy==='categorie'?`style="background:${accent}"`:''}>Par catégorie</button>
     </div>` : '';
 
-  return `<div class="panel-anim">
+  return `<div class="tab-panel">
     <div class="add-toggle">
       <div><h2 class="section-title" style="margin-bottom:2px;">Idées de ${personne}</h2><p class="subtext" style="margin-bottom:0;">${list.length} idée${list.length>1?'s':''}</p></div>
       <button class="primary" id="btnToggleAddIdee">${ui.showAddIdee?'Fermer':'+ Ajouter'}</button>
@@ -1039,10 +1152,10 @@ function renderIdees(personne){
   </div>`;
 }
 
-function renderActiviteCard(a){
+function renderActiviteCard(a, index){
   const emoji = a.emoji || pickEmoji(a.nom, '📍');
   const ouvert = ui.expandedActivites.has(a.id);
-  return `<div class="activity-card-wrap">
+  return `<div class="activity-card-wrap" style="--i:${index||0}">
     <div class="activity-card ${a.fait?'done':''}" data-id="${a.id}">
       <div class="activity-check ${a.fait?'checked':''}">${a.fait?ICON_CHECK:''}</div>
       <button class="activity-icon-btn pic-toggle-btn" data-kind="activite" data-id="${a.id}" title="Changer le pictogramme">${emoji}</button>
@@ -1090,17 +1203,76 @@ function renderActivites(){
       const items = list.filter(a=>a.priorite===prio);
       if(items.length===0) return '';
       const st = SIMPLE_PRIORITY_STYLES[prio];
-      const cards = items.map(renderActiviteCard).join('');
+      const cards = items.map((a,ix)=>renderActiviteCard(a, ix)).join('');
       return `<div class="prio-section"><div class="prio-header" style="background:${st.bg};color:${st.text}"><span class="prio-name">${prio}</span><span class="prio-count">${items.length}</span></div>${cards}</div>`;
     }).join('');
   }
-  return `<div class="panel-anim">
+  return `<div class="tab-panel">
     <div class="add-toggle">
       <div><h2 class="section-title" style="margin-bottom:2px;">Activités à faire</h2><p class="subtext" style="margin-bottom:0;">${list.length} activité${list.length>1?'s':''}</p></div>
       <button class="primary" id="btnToggleAddActivite">${ui.showAddActivite?'Fermer':'+ Ajouter'}</button>
     </div>
     ${ui.showAddActivite ? renderAddActiviteForm() : ''}
     ${body}
+  </div>`;
+}
+
+function renderCourseItem(item, index){
+  const emoji = item.emoji || pickEmoji(item.nom, '🛒');
+  return `<div class="course-item ${item.pris?'taken':''}" data-id="${item.id}" style="--i:${index}">
+    <div class="course-check ${item.pris?'checked':''}">${item.pris?ICON_CHECK:''}</div>
+    <span class="course-emoji">${emoji}</span>
+    <span class="course-name">${escapeHtml(item.nom)}</span>
+    ${item.qte ? `<span class="course-qte">${escapeHtml(item.qte)}</span>` : ''}
+    ${boutonSuppression('course', item.id)}
+  </div>`;
+}
+
+function renderCourses(){
+  const total = state.courses.length;
+  const pris = state.courses.filter(c=>c.pris).length;
+  const restants = total - pris;
+
+  const sections = COURSE_SECTIONS.map(sec=>{
+    const items = state.courses.filter(c=>c.section===sec.id);
+    // Les articles déjà pris descendent en bas de leur section
+    const tries = [...items.filter(c=>!c.pris), ...items.filter(c=>c.pris)];
+    const aPrendre = items.filter(c=>!c.pris).length;
+    const corps = items.length
+      ? tries.map((c,i)=>renderCourseItem(c,i)).join('')
+      : `<div class="empty" style="padding:18px 10px;">Rien à prendre ici.</div>`;
+    return `<div class="course-section">
+      <div class="course-head" style="background:${sec.couleur}">
+        <span class="course-head-title">${sec.emoji} ${sec.id}</span>
+        <span class="course-head-count">${aPrendre} à prendre${items.length?` · ${items.length} au total`:''}</span>
+      </div>
+      ${corps}
+    </div>`;
+  }).join('');
+
+  return `<div class="tab-panel">
+    <div class="add-toggle" style="margin-bottom:10px;">
+      <div>
+        <h2 class="section-title" style="margin-bottom:2px;">Liste de courses</h2>
+        <p class="subtext" style="margin-bottom:0;">${restants} article${restants>1?'s':''} à prendre${pris?` · ${pris} déjà pris`:''}</p>
+      </div>
+      ${pris ? `<button class="primary" id="btnViderPris" style="background:transparent;color:var(--ink);border:1.5px solid var(--line);">Vider les pris</button>` : ''}
+    </div>
+
+    <div class="quick-add">
+      <div class="chip-row" style="margin-bottom:8px;">
+        ${COURSE_SECTIONS.map(s=>`<button type="button" class="chip course-sec-chip ${s.id===ui.courseSection?'selected':''}" data-sec="${s.id}"
+          ${s.id===ui.courseSection?`style="background:${s.couleur};color:#fff;border-color:${s.couleur}"`:''}>${s.emoji} ${s.id}</button>`).join('')}
+      </div>
+      <div class="quick-add-row">
+        <input type="text" id="courseNom" placeholder="Ajouter un article…" autocomplete="off">
+        <input type="text" id="courseQte" placeholder="Qté" class="qte-input" autocomplete="off">
+        <button class="primary" id="btnAddCourse">+</button>
+      </div>
+      <p class="subtext" style="margin:6px 0 0; font-size:11px;">Appuyez sur Entrée pour enchaîner les articles.</p>
+    </div>
+
+    ${sections}
   </div>`;
 }
 
@@ -1354,6 +1526,40 @@ function attachPageEvents(){
     panel.querySelector('.ea-lieu').addEventListener('change', e=>{ act.emplacement = e.target.value.trim(); commit(); });
     panel.querySelectorAll('.ea-prio-row .chip').forEach(chip=> chip.addEventListener('click', ()=>{ act.priorite = chip.dataset.prio; commit(); }));
   });
+
+  // Courses
+  document.querySelectorAll('.course-sec-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{ ui.courseSection = chip.dataset.sec; ui.focusCourse = true; renderAll(); });
+  });
+  const courseNom = document.getElementById('courseNom');
+  const courseQte = document.getElementById('courseQte');
+  function ajouterCourse(){
+    const nom = courseNom.value.trim();
+    if(!nom) return;
+    state.courses.push({ id: uid(), nom, qte: courseQte.value.trim(), section: ui.courseSection, pris:false });
+    courseNom.value = ''; courseQte.value = '';
+    ui.focusCourse = true;
+    commit();
+  }
+  const btnAddCourse = document.getElementById('btnAddCourse');
+  if(btnAddCourse) btnAddCourse.addEventListener('click', ajouterCourse);
+  if(courseNom) courseNom.addEventListener('keydown', e=>{ if(e.key==='Enter') ajouterCourse(); });
+  if(courseQte) courseQte.addEventListener('keydown', e=>{ if(e.key==='Enter') ajouterCourse(); });
+  document.querySelectorAll('.course-item').forEach(item=>{
+    const c = state.courses.find(x=>x.id===item.dataset.id);
+    if(!c) return;
+    item.querySelector('.course-check').addEventListener('click', ()=>{ c.pris = !c.pris; commit(); });
+  });
+  const btnViderPris = document.getElementById('btnViderPris');
+  if(btnViderPris) btnViderPris.addEventListener('click', ()=>{
+    state.courses = state.courses.filter(c=>!c.pris);
+    commit();
+  });
+  if(ui.focusCourse){
+    const el = document.getElementById('courseNom');
+    if(el) el.focus();
+    ui.focusCourse = false;
+  }
 
   // Garde le curseur dans la barre de recherche pendant la frappe
   if(ui.focusSearch){
