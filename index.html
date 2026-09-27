@@ -2,36 +2,108 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Le carnet de projets</title>
+
+<!-- Installation sur l'écran d'accueil du téléphone -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F2E45">
+<meta name="description" content="Réserves, projets, courses et idées de la famille, au même endroit.">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Carnet">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,500;1,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#1F2E45; --ink-soft:#3C4E6B;
     --paper:#FBF3E4; --paper-dim:#F3E9D6;
+    --surface:#FFFFFF;
     --cover:#1F2E45;
     --ochre:#C98A2C; --ochre-dim:#E8C98C;
     --teal:#3F7A6C; --teal-dim:#CFE3DD; --teal-wash:#EEF6F2;
     --danger:#B3413A;
     --line: rgba(31,46,69,0.14);
     --gauge-start:#4C86D9; --gauge-end:#3F9E6C;
+    --pill-bg: rgba(255,255,255,0.88);
+    --tab-bg:#3C4E6B; --tab-bg-hover:#4A5D80; --tab-fg:rgba(251,243,228,0.75);
+    --on-cover:#FBF3E4; --on-cover-soft:rgba(251,243,228,0.58);
+    --on-cover-faint:rgba(251,243,228,0.4); --on-cover-line:rgba(251,243,228,0.25);
+    --rule: rgba(31,46,69,0.055);
+    --card-shadow: rgba(0,0,0,0.10);
+  }
+
+  /* Mode sombre : appliqué au choix de l'utilisateur, ou en suivant le réglage
+     du téléphone quand aucun choix n'a été fait. */
+  :root[data-theme="dark"],
+  :root[data-theme="auto"] { color-scheme: dark; }
+  @media (prefers-color-scheme: light){
+    :root[data-theme="auto"]{ color-scheme: light; }
+  }
+  :root[data-theme="dark"]{
+    --ink:#E9EEF6; --ink-soft:#A7B7CD;
+    --paper:#1A2333; --paper-dim:#222D40;
+    --surface:#212C3E;
+    --cover:#0E1521;
+    --ochre:#D9A241; --ochre-dim:#6B5324;
+    --teal:#4E9A86; --teal-dim:#27463E; --teal-wash:#18302A;
+    --danger:#D2645C;
+    --line: rgba(233,238,246,0.16);
+    --pill-bg: rgba(20,28,42,0.85);
+    --tab-bg:#26334A; --tab-bg-hover:#33435F; --tab-fg:rgba(233,238,246,0.7);
+    --on-cover:#E9EEF6; --on-cover-soft:rgba(233,238,246,0.55);
+    --on-cover-faint:rgba(233,238,246,0.35); --on-cover-line:rgba(233,238,246,0.22);
+    --rule: rgba(233,238,246,0.05);
+    --card-shadow: rgba(0,0,0,0.45);
+  }
+  @media (prefers-color-scheme: dark){
+    :root[data-theme="auto"]{
+      --ink:#E9EEF6; --ink-soft:#A7B7CD;
+      --paper:#1A2333; --paper-dim:#222D40;
+      --surface:#212C3E;
+      --cover:#0E1521;
+      --ochre:#D9A241; --ochre-dim:#6B5324;
+      --teal:#4E9A86; --teal-dim:#27463E; --teal-wash:#18302A;
+      --danger:#D2645C;
+      --line: rgba(233,238,246,0.16);
+      --pill-bg: rgba(20,28,42,0.85);
+      --tab-bg:#26334A; --tab-bg-hover:#33435F; --tab-fg:rgba(233,238,246,0.7);
+      --on-cover:#E9EEF6; --on-cover-soft:rgba(233,238,246,0.55);
+      --on-cover-faint:rgba(233,238,246,0.35); --on-cover-line:rgba(233,238,246,0.22);
+      --rule: rgba(233,238,246,0.05);
+      --card-shadow: rgba(0,0,0,0.45);
+    }
   }
   *{box-sizing:border-box;}
+  html{ -webkit-text-size-adjust:100%; }
   body{
     margin:0; background:var(--cover);
     background-image:
       radial-gradient(circle at 20% 10%, rgba(255,255,255,0.04), transparent 40%),
       radial-gradient(circle at 80% 90%, rgba(255,255,255,0.03), transparent 40%);
     font-family:'IBM Plex Sans', sans-serif; color:var(--ink);
-    min-height:100vh; padding:18px 12px 60px;
+    min-height:100vh;
+    /* Marges adaptées à l'encoche et à la barre d'accueil une fois installée */
+    padding:
+      calc(18px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right))
+      calc(60px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+    overscroll-behavior-y:contain;
   }
+  button, .chip, .tab{ -webkit-tap-highlight-color:transparent; }
+  :focus-visible{ outline:2.5px solid var(--ochre); outline-offset:2px; border-radius:4px; }
+  .app-logo{ width:30px; height:30px; flex-shrink:0; filter:drop-shadow(0 2px 3px rgba(0,0,0,.3)); }
   .wrap{max-width:600px;margin:0 auto;}
-  .titlebar{ padding:4px 8px 6px; color:var(--paper); }
-  .titlebar-top{display:flex; align-items:baseline; justify-content:space-between;}
+  .titlebar{ padding:4px 8px 6px; color:var(--on-cover); }
+  .titlebar-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
   .titlebar h1{ font-family:'Fraunces', serif; font-style:italic; font-weight:600; font-size:26px; margin:0; }
-  .titlebar span{ font-size:12.5px; color:rgba(251,243,228,0.6); }
-  .tagline{ font-family:'Fraunces', serif; font-style:italic; font-size:12.5px; color:rgba(251,243,228,0.55); margin:2px 0 8px 1px; }
+  .titlebar span{ font-size:12.5px; color:var(--on-cover-soft); }
+  .tagline{ font-family:'Fraunces', serif; font-style:italic; font-size:12.5px; color:var(--on-cover-soft); margin:2px 0 8px 1px; }
 
   .summary{ position:sticky; top:10px; z-index:20; display:flex; gap:10px; margin-bottom:14px; }
   .stat{ flex:1; background:var(--paper); border:1.5px solid var(--ink); border-radius:10px; padding:10px 14px; box-shadow:3px 3px 0 rgba(0,0,0,0.18); }
@@ -48,12 +120,12 @@
   .tabs::-webkit-scrollbar{display:none;}
   .tab{
     font-family:'IBM Plex Sans', sans-serif; font-weight:600; font-size:13px; white-space:nowrap; flex-shrink:0;
-    background:var(--ink-soft); color:rgba(251,243,228,0.75); border:none;
+    background:var(--tab-bg); color:var(--tab-fg); border:none;
     padding:10px 14px 12px; border-radius:10px 10px 0 0; cursor:pointer;
     position:relative; top:2px; transition:transform .12s ease, background .15s ease, color .15s ease;
   }
   .tab.active{ background:var(--paper); color:var(--ink); top:0; }
-  .tab:not(.active):hover{ background:#4a5d80; color:var(--paper); }
+  .tab:not(.active):hover{ background:var(--tab-bg-hover); color:var(--on-cover); }
   .tab:active{ transform:scale(.96); }
   @keyframes underlineGrow{ from{transform:scaleX(0);} to{transform:scaleX(1);} }
   .tab.active::after{
@@ -63,7 +135,7 @@
 
   .page{
     background:var(--paper);
-    background-image: repeating-linear-gradient(to bottom, transparent, transparent 26px, rgba(31,46,69,0.055) 27px);
+    background-image: repeating-linear-gradient(to bottom, transparent, transparent 26px, var(--rule) 27px);
     border-radius:0 10px 10px 10px; border:1.5px solid var(--ink);
     padding:20px 16px 24px; min-height:320px; overflow:hidden;
   }
@@ -76,7 +148,7 @@
   label{font-size:12.5px; color:var(--ink-soft); display:block; margin-bottom:4px;}
   input[type=text], input[type=number], input[type=date], input[type=url], textarea, select{
     font-family:'IBM Plex Sans', sans-serif; font-size:14.5px; padding:8px 10px;
-    border:1.5px solid var(--line); border-radius:7px; background:#fff; color:var(--ink); width:100%;
+    border:1.5px solid var(--line); border-radius:7px; background:var(--surface); color:var(--ink); width:100%;
   }
   textarea{ resize:vertical; min-height:56px; font-family:'IBM Plex Sans', sans-serif; }
   input:focus, select:focus, textarea:focus{ outline:2px solid var(--ochre); outline-offset:1px; }
@@ -85,7 +157,7 @@
   .row2{display:flex; gap:10px;}
   .row2 .field{flex:1;}
 
-  .bar-outer{ height:34px; border:1.5px solid var(--ink); border-radius:8px; overflow:hidden; display:flex; margin:14px 0 8px; background:#fff; }
+  .bar-outer{ height:34px; border:1.5px solid var(--ink); border-radius:8px; overflow:hidden; display:flex; margin:14px 0 8px; background:var(--surface); }
   .bar-seg{height:100%; transition:width .3s ease;}
   .bar-legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; margin-bottom:20px;}
   .bar-legend .dot{width:9px;height:9px;border-radius:2px; display:inline-block; margin-right:5px;}
@@ -93,7 +165,7 @@
 
   button{ transition: transform .12s ease; font-family:'IBM Plex Sans', sans-serif; }
   button.primary{
-    font-weight:600; font-size:13.5px; background:var(--ink); color:var(--paper); border:none;
+    font-weight:600; font-size:13.5px; background:var(--ink); color:var(--surface); border:none;
     padding:10px 16px; border-radius:8px; cursor:pointer;
   }
   button.primary:hover{background:var(--ink-soft);}
@@ -102,7 +174,7 @@
   .chip-row{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:2px;}
   .chip{
     font-size:12.5px; font-weight:500; padding:6px 12px; border-radius:20px;
-    border:1.5px solid var(--line); background:#fff; cursor:pointer; color:var(--ink-soft);
+    border:1.5px solid var(--line); background:var(--surface); cursor:pointer; color:var(--ink-soft);
     transition: background .15s ease, border-color .15s ease, transform .12s ease;
     display:inline-flex; align-items:center;
   }
@@ -120,12 +192,12 @@
 
   /* Project cards */
   .card{
-    background:#fff; border:1.5px solid var(--ink); border-radius:10px;
+    background:var(--surface); border:1.5px solid var(--ink); border-radius:10px;
     padding:9px 10px 9px 12px; margin-bottom:9px; position:relative; border-left-width:6px;
     transition: background-color .35s ease, border-color .35s ease, box-shadow .2s ease, transform .2s ease;
   }
   .card.funded{ background:var(--teal-wash); border-color:var(--teal); }
-  @media (hover:hover){ .card:hover{ box-shadow:4px 4px 0 rgba(0,0,0,0.10); transform:translateY(-1px); } }
+  @media (hover:hover){ .card:hover{ box-shadow:4px 4px 0 var(--card-shadow); transform:translateY(-1px); } }
   .card-top{display:flex; gap:9px; align-items:flex-start;}
   .card-icon-btn{
     width:46px; height:46px; border-radius:50%; background:var(--paper-dim); border:1.5px solid var(--line);
@@ -151,7 +223,7 @@
   .person-pill{ font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:20px; color:#fff; }
 
   .emoji-picker{ display:flex; flex-wrap:wrap; gap:5px; background:var(--paper-dim); border:1.5px dashed var(--line); border-radius:10px; padding:8px; margin:2px 0 8px; max-height:150px; overflow-y:auto; }
-  .emoji-option{ width:32px; height:32px; border-radius:8px; border:1.5px solid var(--line); background:#fff; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+  .emoji-option{ width:32px; height:32px; border-radius:8px; border:1.5px solid var(--line); background:var(--surface); font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
   .emoji-option:active{ transform:scale(.9); }
   .emoji-option.selected{ border-color:var(--ink); background:var(--teal-wash); }
   .emoji-option.auto-option{ width:auto; padding:0 10px; font-size:10.5px; font-weight:600; color:var(--ink-soft); }
@@ -163,18 +235,18 @@
     width:64px; padding:2px 5px; font-size:12px; border:1.5px solid transparent; background:transparent;
     text-align:right; font-family:'Fraunces', serif; font-weight:600; color:var(--ink);
   }
-  .progress-label .objectif-edit input:hover, .progress-label .objectif-edit input:focus{ border-color:var(--line); background:#fff; }
+  .progress-label .objectif-edit input:hover, .progress-label .objectif-edit input:focus{ border-color:var(--line); background:var(--surface); }
   .progress-bar-outer{ position:relative; height:21px; border-radius:20px; overflow:hidden; border:1.2px solid var(--line); background: linear-gradient(90deg, var(--gauge-start) 0%, var(--gauge-end) 100%); }
   .progress-bar-cover{ position:absolute; top:0; right:0; height:100%; background:var(--paper-dim); transition: width .35s ease; }
   .progress-bar-pct{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
-  .progress-bar-pct span{ background:rgba(255,255,255,0.88); color:var(--ink); font-family:'Fraunces', serif; font-weight:600; font-size:10.5px; padding:1px 8px; border-radius:20px; }
+  .progress-bar-pct span{ background:var(--pill-bg); color:var(--ink); font-family:'Fraunces', serif; font-weight:600; font-size:10.5px; padding:1px 8px; border-radius:20px; }
   .monthly-hint{ font-size:10.5px; color:var(--ink-soft); margin:4px 0 6px; }
   .monthly-hint strong{ color:var(--ink); }
 
   .card-bottom{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:4px;}
   .amount-controls{display:flex; align-items:center; gap:6px;}
   .amount-controls input{width:88px; text-align:right; font-family:'Fraunces', serif; font-weight:600;}
-  .step-btn{ width:26px; height:26px; border-radius:6px; border:1.5px solid var(--line); background:#fff; cursor:pointer; font-size:15px; line-height:1; color:var(--ink-soft); }
+  .step-btn{ width:26px; height:26px; border-radius:6px; border:1.5px solid var(--line); background:var(--surface); cursor:pointer; font-size:15px; line-height:1; color:var(--ink-soft); }
   .step-btn:hover{border-color:var(--ink); color:var(--ink);}
   .step-btn:active{ transform:scale(.9); }
   .card-actions{display:flex; gap:4px; align-items:center;}
@@ -186,6 +258,23 @@
   .notes-badge{ position:absolute; top:-3px; right:-3px; background:var(--ochre); color:#fff; font-size:9px; font-weight:700; width:14px;height:14px;border-radius:50%; display:flex;align-items:center;justify-content:center; }
   .reorder-col{display:flex; flex-direction:column; gap:2px;}
   .reorder-col button{padding:0; width:22px; height:18px; font-size:11px;}
+  .drag-handle{
+    width:30px; height:34px; padding:0; border:none; background:transparent; cursor:grab;
+    color:var(--ink-soft); opacity:.55; border-radius:7px; touch-action:none;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .drag-handle svg{ width:19px; height:19px; }
+  .drag-handle:hover{ opacity:1; background:var(--paper-dim); }
+  .drag-handle:active{ cursor:grabbing; }
+  .card.dragging{
+    position:relative; z-index:60; cursor:grabbing;
+    box-shadow:0 10px 26px rgba(0,0,0,.35); transform-origin:center;
+    /* sans cela, la carte suivrait le doigt avec le retard de la transition
+       héritée de .card, et les permutations seraient calculées de travers */
+    transition:none;
+  }
+  .card.dragging .drag-handle{ opacity:1; }
+  .prio-section.reordering .card:not(.dragging){ transition: transform .18s ease; }
 
   .edit-panel{ margin-top:12px; padding-top:12px; border-top:1.5px dashed var(--line); }
   .notes-section{margin-top:10px;}
@@ -201,18 +290,18 @@
   .empty{ text-align:center; padding:34px 10px; color:var(--ink-soft); font-size:13.5px; }
   .empty .big{font-family:'Fraunces', serif; font-style:italic; font-size:17px; display:block; margin-bottom:4px; color:var(--ink);}
 
-  .vg-item{ display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid var(--line); border-radius:9px; padding:9px 12px; margin-bottom:9px; }
+  .vg-item{ display:flex; align-items:center; gap:10px; background:var(--surface); border:1.5px solid var(--line); border-radius:9px; padding:9px 12px; margin-bottom:9px; }
   .vg-item.done{opacity:0.55;}
   .vg-item.done .vg-name{text-decoration:line-through;}
-  .vg-check{ width:20px; height:20px; border-radius:5px; border:1.8px solid var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; background:#fff; transition: background .15s ease, border-color .15s ease; }
+  .vg-check{ width:20px; height:20px; border-radius:5px; border:1.8px solid var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; background:var(--surface); transition: background .15s ease, border-color .15s ease; }
   .vg-check.checked{ background:var(--teal); border-color:var(--teal); }
   .vg-check svg{width:13px;height:13px;color:#fff;}
   .vg-name{flex:1; font-size:14.5px;}
 
   /* Idea cards */
 
-  .idea-card{ display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid var(--ink); border-left-width:6px; border-radius:10px; padding:9px 12px; transition: box-shadow .2s ease, transform .2s ease; }
-  @media (hover:hover){ .idea-card:hover{ box-shadow:3px 3px 0 rgba(0,0,0,0.08); transform:translateY(-1px);} }
+  .idea-card{ display:flex; align-items:center; gap:10px; background:var(--surface); border:1.5px solid var(--ink); border-left-width:6px; border-radius:10px; padding:9px 12px; transition: box-shadow .2s ease, transform .2s ease; }
+  @media (hover:hover){ .idea-card:hover{ box-shadow:3px 3px 0 var(--card-shadow); transform:translateY(-1px);} }
   .idea-icon-btn{ width:40px;height:40px;border-radius:50%; background:var(--paper-dim); border:1.5px solid var(--line); display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0; cursor:pointer; padding:0; transition: transform .12s ease; }
   .idea-icon-btn:active{ transform:scale(.92); }
   .idea-card-wrap{ display:flex; flex-direction:column; margin-bottom:9px; }
@@ -222,10 +311,10 @@
 
   /* Activity cards */
   .activity-card-wrap{ margin-bottom:9px; }
-  .activity-card{ display:flex; align-items:center; gap:10px; background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; }
+  .activity-card{ display:flex; align-items:center; gap:10px; background:var(--surface); border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; }
   .activity-card.done{ opacity:.6; }
   .activity-card.done .activity-name{ text-decoration:line-through; }
-  .activity-check{ width:22px;height:22px;border-radius:6px;border:1.8px solid var(--ink-soft); display:flex;align-items:center;justify-content:center; cursor:pointer; flex-shrink:0; background:#fff; transition: background .15s ease, border-color .15s ease; }
+  .activity-check{ width:22px;height:22px;border-radius:6px;border:1.8px solid var(--ink-soft); display:flex;align-items:center;justify-content:center; cursor:pointer; flex-shrink:0; background:var(--surface); transition: background .15s ease, border-color .15s ease; }
   .activity-check.checked{ background:var(--teal); border-color:var(--teal); }
   .activity-check svg{width:13px;height:13px;color:#fff;}
   .activity-icon-btn{ width:40px;height:40px;border-radius:50%; background:var(--paper-dim); border:1.5px solid var(--line); display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0; cursor:pointer; padding:0; transition: transform .12s ease; }
@@ -239,7 +328,7 @@
 
   /* Vue d'ensemble des projets */
   .overview{
-    background:linear-gradient(135deg, var(--ink) 0%, #2A3D5C 100%); color:var(--paper);
+    background:linear-gradient(135deg, #1F2E45 0%, #2A3D5C 100%); color:#FBF3E4;
     border-radius:12px; padding:14px 16px; margin-bottom:14px; box-shadow:3px 3px 0 rgba(0,0,0,0.15);
   }
   .overview-top{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:9px; gap:10px; }
@@ -249,7 +338,7 @@
   .overview-bar{ position:relative; height:16px; border-radius:20px; overflow:hidden; background:rgba(255,255,255,0.14); }
   .overview-fill{ height:100%; border-radius:20px; background:linear-gradient(90deg, var(--gauge-start), var(--gauge-end)); transition:width .5s cubic-bezier(.3,1.2,.5,1); }
   .overview-stats{ display:flex; gap:14px; flex-wrap:wrap; margin-top:9px; font-size:11.5px; color:rgba(251,243,228,0.75); }
-  .overview-stats b{ color:var(--paper); font-family:'Fraunces',serif; }
+  .overview-stats b{ color:#FBF3E4; font-family:'Fraunces',serif; }
 
   /* Recherche et filtres */
   .toolbar{ display:flex; gap:8px; margin-bottom:10px; align-items:center; }
@@ -257,9 +346,11 @@
   .filter-row{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
   .filter-chip{
     font-size:11.5px; font-weight:600; padding:4px 11px; border-radius:20px; cursor:pointer;
-    border:1.5px solid var(--line); background:#fff; color:var(--ink-soft); transition:all .15s ease;
+    border:1.5px solid var(--line); background:var(--surface); color:var(--ink-soft); transition:all .15s ease;
   }
   .filter-chip.on{ color:#fff; border-color:transparent; }
+  /* La pastille "Tous" n'a pas de couleur propre : elle s'inverse selon le thème */
+  .filter-chip.tous.on{ background:var(--ink); color:var(--surface); border-color:var(--ink); }
   .filter-chip:active{ transform:scale(.94); }
 
   /* Badges d'échéance */
@@ -292,13 +383,50 @@
     100%{ transform:translateY(105vh) rotate(720deg); opacity:0; }
   }
 
-  .author-note{ text-align:center; font-size:11px; color:rgba(251,243,228,0.4); margin-top:4px; }
+  .author-note{ text-align:center; font-size:11px; color:var(--on-cover-faint); margin-top:4px; }
   .whoami{ display:flex; align-items:center; gap:6px; }
   .whoami select{
     width:auto; font-size:11.5px; padding:3px 8px; border-radius:20px; background:rgba(255,255,255,0.1);
-    border:1.5px solid rgba(251,243,228,0.25); color:var(--paper);
+    border:1.5px solid var(--on-cover-line); color:var(--on-cover);
   }
   .whoami select option{ color:var(--ink); }
+  .theme-btn{
+    width:30px; height:30px; flex-shrink:0; border-radius:50%; cursor:pointer; font-size:14px; line-height:1;
+    background:rgba(255,255,255,0.1); border:1.5px solid var(--on-cover-line); color:var(--on-cover);
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .theme-btn:active{ transform:scale(.9); }
+
+  .prix-badge{
+    font-size:11px; font-weight:700; color:#fff; background:var(--ochre);
+    border-radius:20px; padding:2px 9px; letter-spacing:.2px;
+  }
+  .activity-card.done .prix-badge{ background:var(--ink-soft); }
+
+  button.primary.btn-partage{
+    display:flex; align-items:center; justify-content:center; gap:7px; width:100%;
+    margin-bottom:14px; background:transparent; color:var(--ink);
+    border:1.5px dashed var(--line); font-size:13px;
+  }
+  .btn-partage svg{ width:16px; height:16px; }
+  button.primary.btn-partage:hover{ background:var(--paper-dim); border-color:var(--ink); color:var(--ink); }
+
+  #toast{
+    position:fixed; left:50%; transform:translateX(-50%) translateY(20px);
+    bottom:calc(24px + env(safe-area-inset-bottom)); z-index:700;
+    background:var(--ink); color:var(--surface); font-size:13px; font-weight:500;
+    padding:10px 18px; border-radius:22px; box-shadow:0 6px 20px rgba(0,0,0,.4);
+    opacity:0; pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+  }
+  #toast.visible{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .suggestions{ margin:-6px 0 16px; }
+  .suggestions-titre{ font-size:11px; color:var(--ink-soft); margin-bottom:6px; letter-spacing:.2px; }
+  .suggestion-chip{ font-size:12px; padding:5px 11px; }
+  .suggestion-chip::after{ content:'+'; margin-left:6px; font-weight:700; color:var(--teal); }
+  .suggestion-chip:hover{ border-color:var(--teal); color:var(--ink); }
+
+  .course-sec-chip.selected{ background:var(--sec-color); border-color:var(--sec-color); color:#fff; }
 
   /* Liste de courses */
   .quick-add{ background:var(--paper-dim); border:1.5px dashed var(--line); border-radius:11px; padding:12px; margin-bottom:18px; }
@@ -315,7 +443,7 @@
   .course-head-title{ font-family:'Fraunces',serif; font-weight:600; font-size:15px; }
   .course-head-count{ font-size:11.5px; opacity:.85; }
   .course-item{
-    display:flex; align-items:center; gap:10px; background:#fff;
+    display:flex; align-items:center; gap:10px; background:var(--surface);
     border:1.5px solid var(--line); border-radius:9px; padding:9px 11px; margin-bottom:7px;
     transition: opacity .25s ease, background .25s ease, transform .15s ease;
   }
@@ -324,7 +452,7 @@
   .course-item.taken .course-name{ text-decoration:line-through; }
   .course-check{
     width:22px; height:22px; border-radius:50%; border:2px solid var(--ink-soft); flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; cursor:pointer; background:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; background:var(--surface);
     transition: background .2s ease, border-color .2s ease, transform .18s ease;
   }
   .course-check:active{ transform:scale(.85); }
@@ -374,7 +502,22 @@
 
   .empty .emoji-big{ font-size:34px; display:block; margin-bottom:6px; opacity:.75; }
 
-  .sync-note{ text-align:center; font-size:11.5px; color:rgba(251,243,228,0.55); margin-top:16px; }
+  /* Bandeau de mise à jour */
+  #updateBar{
+    display:none; position:fixed; left:12px; right:12px;
+    bottom:calc(12px + env(safe-area-inset-bottom)); z-index:500;
+    align-items:center; justify-content:space-between; gap:10px;
+    background:var(--paper); border:1.5px solid var(--ink); border-radius:11px;
+    padding:11px 13px; font-size:13px; box-shadow:0 6px 20px rgba(0,0,0,.35);
+    animation: cardIn .35s cubic-bezier(.2,.8,.3,1);
+  }
+  #updateBar button{
+    flex-shrink:0; font-weight:600; font-size:12.5px; background:var(--ink); color:var(--surface);
+    border:none; padding:8px 14px; border-radius:8px; cursor:pointer;
+  }
+  #updateBar button:active{ transform:scale(.95); }
+
+  .sync-note{ text-align:center; font-size:11.5px; color:var(--on-cover-soft); margin-top:16px; }
 </style>
 </head>
 <body>
@@ -382,12 +525,28 @@
 
   <div class="titlebar">
     <div class="titlebar-top">
-      <h1>Le carnet de projets</h1>
+      <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+        <svg class="app-logo" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="12" y="8" width="34" height="44" rx="4" fill="#FBF3E4"/>
+          <rect x="17" y="8" width="5" height="44" fill="#C98A2C"/>
+          <g fill="#3C4E6B" opacity=".55">
+            <rect x="26" y="19" width="15" height="2.6" rx="1.3"/>
+            <rect x="26" y="26" width="15" height="2.6" rx="1.3"/>
+            <rect x="26" y="33" width="9"  height="2.6" rx="1.3"/>
+          </g>
+          <circle cx="45" cy="43" r="14" fill="#A87A26"/>
+          <circle cx="45" cy="43" r="12.6" fill="#D9A441"/>
+          <text x="45" y="43" font-family="Georgia, serif" font-size="17" font-weight="bold"
+                fill="#1F2E45" text-anchor="middle" dominant-baseline="central">€</text>
+        </svg>
+        <h1>Le carnet de projets</h1>
+      </div>
       <span id="loadingTag">chargement…</span>
     </div>
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
       <p class="tagline" style="margin:2px 0 8px 1px;">Petits sous, grands projets ✨</p>
       <div class="whoami">
+        <button type="button" id="themeBtn" class="theme-btn" title="Changer l'apparence"></button>
         <select id="whoamiSelect" title="Qui utilise le carnet ?">
           <option value="">Qui es-tu ?</option>
         </select>
@@ -404,20 +563,39 @@
 
   <div class="page" id="page"></div>
 
-  <div class="sync-note">Ce carnet est partagé — tout ce qui est ajouté ou modifié ici est visible par vous et votre épouse.</div>
+  <div class="sync-note">Ce carnet est partagé : tout ce qui est ajouté ou modifié ici est visible par vous et votre épouse.</div>
   <div class="author-note" id="authorNote"></div>
+</div>
+
+<div id="updateBar">
+  <span>Une nouvelle version du carnet est disponible.</span>
+  <button type="button">Recharger</button>
 </div>
 <div id="confetti-layer"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
+         doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { firebaseConfig } from './firebase-config.js';
 
 // Un seul document Firestore contient tout le carnet (réserves, projets, idées, activités...).
 // C'est volontairement simple : pas de comptes utilisateurs, juste ce document partagé.
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+
+// Base locale persistante : le carnet reste consultable et modifiable sans réseau,
+// et les changements repartent vers le serveur dès que la connexion revient.
+// persistentMultipleTabManager autorise plusieurs onglets ouverts en même temps.
+let db;
+try{
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  });
+}catch(e){
+  // Navigateur sans IndexedDB (navigation privée ancienne) : on continue en ligne seulement
+  console.warn('Mode hors ligne indisponible sur ce navigateur', e);
+  db = initializeFirestore(app, {});
+}
 const docRef = doc(db, 'carnetFamilial', 'menage');
 
 function setSyncStatus(txt){
@@ -434,11 +612,34 @@ const TYPE_ICONS = {
   'Autre': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M5 8l14 8M19 8L5 16"/></svg>'
 };
 const PRIORITIES = ['Prioritaire','Obligatoire','Peut-être','Pourquoi pas','Pas sûr'];
-const PRIORITY_STYLES = {
+// Deux jeux de couleurs : les bandeaux pâles deviennent illisibles sur fond sombre
+const PRIORITY_STYLES_CLAIR = {
   'Prioritaire':  { bg:'#6E3140', text:'#FBF3E4' }, 'Obligatoire':  { bg:'#96503F', text:'#FBF3E4' },
   'Peut-être':    { bg:'#BE8A4C', text:'#FBF3E4' }, 'Pourquoi pas': { bg:'#D9C9A3', text:'#1F2E45' },
   'Pas sûr':      { bg:'#E9E3D3', text:'#3C4E6B' }
 };
+const PRIORITY_STYLES_SOMBRE = {
+  'Prioritaire':  { bg:'#8A3F52', text:'#FBF3E4' }, 'Obligatoire':  { bg:'#A75B48', text:'#FBF3E4' },
+  'Peut-être':    { bg:'#9A6E3B', text:'#FBF3E4' }, 'Pourquoi pas': { bg:'#5C5137', text:'#EFE6D2' },
+  'Pas sûr':      { bg:'#333D4F', text:'#C3CEDD' }
+};
+const SIMPLE_STYLES_SOMBRE = {
+  'Haute':{bg:'#3E5476',text:'#EDF2F9'}, 'Moyenne':{bg:'#4A5A73',text:'#EDF2F9'}, 'Faible':{bg:'#333D4F',text:'#C3CEDD'}
+};
+const IDEA_STYLES_SOMBRE = {
+  'Marion': { 'Haute':{bg:'#8E4654',text:'#FBF3E4'}, 'Moyenne':{bg:'#A2616C',text:'#FBF3E4'}, 'Faible':{bg:'#4A3940',text:'#E4D3D7'} },
+  'Nil':    { 'Haute':{bg:'#35608A',text:'#FBF3E4'}, 'Moyenne':{bg:'#4C7899',text:'#FBF3E4'}, 'Faible':{bg:'#2F3E4C',text:'#CFDCE6'} }
+};
+function sombreActif(){
+  const t = document.documentElement.dataset.theme;
+  if(t === 'dark') return true;
+  if(t === 'light') return false;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+// Accès aux couleurs selon le thème en vigueur au moment du rendu
+const PRIORITY_STYLES = new Proxy({}, {
+  get: (_, k) => (sombreActif() ? PRIORITY_STYLES_SOMBRE : PRIORITY_STYLES_CLAIR)[k]
+});
 const SIMPLE_PRIORITIES = ['Haute','Moyenne','Faible'];
 const SIMPLE_PRIORITY_STYLES = {
   'Haute':{bg:'#1F2E45',text:'#FBF3E4'}, 'Moyenne':{bg:'#7C8CA6',text:'#FBF3E4'}, 'Faible':{bg:'#E3E7ED',text:'#1F2E45'}
@@ -529,6 +730,8 @@ const ICON_PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
 const ICON_CHECK_CIRCLE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.5 2.5 4.5-5"/></svg>';
 const ICON_UNDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h11a5 5 0 010 10h-6"/><path d="M7.5 5.5L4 9l3.5 3.5"/></svg>';
 const ICON_SEARCH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>';
+const ICON_GRIP = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.7"/><circle cx="15" cy="6" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="18" r="1.7"/><circle cx="15" cy="18" r="1.7"/></svg>';
+const ICON_SHARE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M8.5 7.5L12 4l3.5 3.5"/><path d="M5 13v6a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19v-6"/></svg>';
 
 let state = { reserveTotal: 0, reserveSecurite: 0, projets: [], videGrenier: [], idees: [], activites: [], courses: [] };
 let ui = {
@@ -538,12 +741,54 @@ let ui = {
   expandedProjects: new Set(), emojiPickerOpen: new Set(),
   expandedIdees: new Set(), expandedActivites: new Set(),
   projetSearch: '', projetFiltrePersonne: '', focusSearch: false,
-  pendingDelete: null, showArchive: false, ideeGroupBy: 'priorite',
+  pendingDelete: null, showArchive: false, ideeGroupBy: 'priorite', focusHandle: null,
   courseSection: 'Maison', focusCourse: false, animateTab: true
 };
 
 // Identité locale (stockée sur l'appareil, pas dans Firestore) pour signer les modifications.
 let moi = localStorage.getItem('carnet-utilisateur') || '';
+
+// Ouverture directe sur un onglet (raccourcis de l'écran d'accueil : ?onglet=courses)
+const ongletDemande = new URLSearchParams(location.search).get('onglet');
+if(ongletDemande && TABS.some(t=>t.id===ongletDemande)) ui.activeTab = ongletDemande;
+
+// --- Protection de la saisie en cours -----------------------------------
+// Un rendu complet remplace le contenu de la page : sans précaution, tout texte
+// tapé mais pas encore enregistré serait perdu (changement de pastille, ou
+// modification faite par l'autre personne pendant qu'on écrit).
+// On photographie donc les champs de saisie avant le rendu, et on les restaure
+// après, curseur compris. Seuls les champs marqués data-keep sont concernés :
+// les champs pilotés par les données (montants, objectifs) doivent bien se
+// rafraîchir depuis l'état.
+function photographierSaisies(){
+  const saisies = { valeurs:{}, actif:null, debut:0, fin:0 };
+  document.querySelectorAll('#page [data-keep]').forEach(el=>{
+    saisies.valeurs[el.dataset.keep] = el.value;
+  });
+  const actif = document.activeElement;
+  if(actif && actif.dataset && actif.dataset.keep){
+    saisies.actif = actif.dataset.keep;
+    try{ saisies.debut = actif.selectionStart; saisies.fin = actif.selectionEnd; }catch(e){}
+  }
+  return saisies;
+}
+function restaurerSaisies(saisies){
+  document.querySelectorAll('#page [data-keep]').forEach(el=>{
+    const v = saisies.valeurs[el.dataset.keep];
+    if(v !== undefined && v !== '') el.value = v;
+    if(saisies.actif && el.dataset.keep === saisies.actif){
+      el.focus();
+      try{ el.setSelectionRange(saisies.debut, saisies.fin); }catch(e){}
+    }
+  });
+}
+// Sélection d'une pastille sans reconstruire la page (évite toute perte de saisie)
+function activerPastille(chip){
+  const rangee = chip.parentElement;
+  if(!rangee) return;
+  rangee.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
+  chip.classList.add('selected');
+}
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function euros(n){ return (Number(n)||0).toLocaleString('fr-FR') + ' €'; }
@@ -572,9 +817,9 @@ function cardMonthlyHint(p){
   if(objectif <= 0 || remaining <= 0 || !p.echeance) return '';
   const months = moisRestants(p.echeance);
   if(months === null) return '';
-  if(months === 0) return `<div class="monthly-hint">Échéance proche — à réunir : <strong>${euros(remaining)}</strong></div>`;
+  if(months === 0) return `<div class="monthly-hint">Échéance dans moins d'un mois, reste <strong>${euros(remaining)}</strong> à réunir</div>`;
   const mensuel = Math.ceil(remaining / months);
-  return `<div class="monthly-hint">Encore <strong>${euros(remaining)}</strong> à épargner — soit <strong>${euros(mensuel)}/mois</strong></div>`;
+  return `<div class="monthly-hint">Encore <strong>${euros(remaining)}</strong> à épargner, soit <strong>${euros(mensuel)}/mois</strong></div>`;
 }
 
 function migrateState(){
@@ -583,6 +828,7 @@ function migrateState(){
   if(!state.idees) state.idees = [];
   if(!state.activites) state.activites = [];
   if(!state.courses) state.courses = [];
+  if(!state.coursesFrequentes) state.coursesFrequentes = {};
   state.projets.forEach(p=>{
     if(p.objectif === undefined){ p.objectif = Number(p.montant) || 0; p.epargne = Number(p.montant) || 0; delete p.montant; }
     if(p.epargne === undefined) p.epargne = 0;
@@ -696,6 +942,7 @@ let firstSnapshot = true;
 
 function subscribeState(){
   buildTabs();
+  initTheme();
   initWhoami();
   setSyncStatus('connexion…');
   onSnapshot(docRef, { includeMetadataChanges: true }, (snap)=>{
@@ -730,6 +977,40 @@ async function saveState(){
   }
 }
 function commit(){ saveState(); renderAll(); }
+
+// --- Apparence claire / sombre ------------------------------------------
+// Trois états : suivre le téléphone, forcer clair, forcer sombre.
+const THEMES = [
+  { id:'auto',  icone:'◐', libelle:"Apparence : selon le téléphone" },
+  { id:'light', icone:'☀', libelle:"Apparence : claire" },
+  { id:'dark',  icone:'☾', libelle:"Apparence : sombre" }
+];
+function appliquerTheme(id){
+  document.documentElement.dataset.theme = id;
+  localStorage.setItem('carnet-theme', id);
+  const t = THEMES.find(x=>x.id===id) || THEMES[0];
+  const btn = document.getElementById('themeBtn');
+  if(btn){ btn.textContent = t.icone; btn.title = t.libelle; }
+  // la barre d'état du téléphone suit la couleur de fond
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute('content', sombreActif() ? '#0E1521' : '#1F2E45');
+}
+function initTheme(){
+  appliquerTheme(localStorage.getItem('carnet-theme') || 'auto');
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.addEventListener('click', ()=>{
+    const actuel = document.documentElement.dataset.theme || 'auto';
+    const suivant = THEMES[(THEMES.findIndex(t=>t.id===actuel) + 1) % THEMES.length].id;
+    appliquerTheme(suivant);
+    renderAll();   // les bandeaux de priorité changent de couleurs
+  });
+  // si l'appareil bascule tout seul (nuit), on redessine en mode automatique
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{
+    if((document.documentElement.dataset.theme || 'auto') === 'auto'){
+      appliquerTheme('auto'); renderAll();
+    }
+  });
+}
 
 function initWhoami(){
   const sel = document.getElementById('whoamiSelect');
@@ -789,6 +1070,7 @@ function renderAll(){
   }
 
   const page = document.getElementById('page');
+  const saisiesEnCours = photographierSaisies();
   if(ui.activeTab === 'reserves') page.innerHTML = renderReserves();
   else if(ui.activeTab === 'projets') page.innerHTML = renderProjets();
   else if(ui.activeTab === 'courses') page.innerHTML = renderCourses();
@@ -804,6 +1086,7 @@ function renderAll(){
     ui.animateTab = false;
   }
 
+  restaurerSaisies(saisiesEnCours);
   attachPageEvents();
 }
 
@@ -829,9 +1112,9 @@ function renderReserves(){
       <div class="bar-seg" style="width:${pctFree}%; background:var(--teal);"></div>
     </div>
     <div class="bar-legend">
-      <span><i class="dot" style="background:var(--ink-soft);"></i>Sécurité — ${euros(state.reserveSecurite)}</span>
-      <span><i class="dot" style="background:var(--ochre);"></i>Épargné sur les projets — ${euros(t.attribue)}</span>
-      <span><i class="dot" style="background:var(--teal);"></i>Non attribué — ${euros(t.libre)}</span>
+      <span><i class="dot" style="background:var(--ink-soft);"></i>Sécurité : ${euros(state.reserveSecurite)}</span>
+      <span><i class="dot" style="background:var(--ochre);"></i>Épargné sur les projets : ${euros(t.attribue)}</span>
+      <span><i class="dot" style="background:var(--teal);"></i>Non attribué : ${euros(t.libre)}</span>
     </div>
     ${warn}
     <div style="border-top:1.5px dashed var(--line); margin-top:6px; padding-top:14px;">
@@ -873,8 +1156,8 @@ function renderEditPanel(p){
           <button type="button" class="chip" data-notetype="Lien">${ICON_LINK}Lien</button>
           <button type="button" class="chip" data-notetype="Image">${ICON_IMAGE}Image</button>
         </div>
-        <textarea class="note-input-text" placeholder="Une idée, une remarque..."></textarea>
-        <input type="url" class="note-input-url" placeholder="https://..." style="display:none;">
+        <textarea class="note-input-text" data-keep="noteTexte-${p.id}" placeholder="Une idée, une remarque..."></textarea>
+        <input type="url" class="note-input-url" data-keep="noteUrl-${p.id}" placeholder="https://..." style="display:none;">
         <button class="primary add-note-btn" style="margin-top:8px;">Ajouter la note</button>
       </div>
     </div>
@@ -910,8 +1193,7 @@ function renderProjetCard(p, groupList){
         </div>
       </div>
       <div class="reorder-col">
-        <button class="ghost step-btn reorder-up" ${posInGroup===0?'disabled style="opacity:.3"':''}>${ICON_UP}</button>
-        <button class="ghost step-btn reorder-down" ${posInGroup===groupList.length-1?'disabled style="opacity:.3"':''}>${ICON_DOWN}</button>
+        <button class="drag-handle" data-id="${p.id}" title="Glisser pour réordonner (ou flèches du clavier)" aria-label="Réordonner ${escapeHtml(p.nom)}">${ICON_GRIP}</button>
       </div>
     </div>
     ${renderEmojiPicker('projet', p.id, p.emoji)}
@@ -983,7 +1265,7 @@ function renderProjets(){
       <input type="text" id="projetSearch" placeholder="Rechercher un projet…" value="${escapeHtml(ui.projetSearch)}">
     </div>
     <div class="filter-row">
-      <button class="filter-chip ${!ui.projetFiltrePersonne?'on':''}" data-filtre="" ${!ui.projetFiltrePersonne?'style="background:var(--ink)"':''}>Tous</button>
+      <button class="filter-chip tous ${!ui.projetFiltrePersonne?'on':''}" data-filtre="">Tous</button>
       ${PERSONS.map(per=>`<button class="filter-chip ${ui.projetFiltrePersonne===per?'on':''}" data-filtre="${per}" ${ui.projetFiltrePersonne===per?`style="background:${PERSON_COLORS[per]}"`:''}>${per}</button>`).join('')}
     </div>` : '';
 
@@ -1031,13 +1313,13 @@ function renderProjets(){
 
 function renderAddProjetForm(){
   return `<div class="add-form">
-      <div class="field"><label for="npNom">Nom du projet</label><input type="text" id="npNom" placeholder="Ex. Refaire la salle de bain"></div>
+      <div class="field"><label for="npNom">Nom du projet</label><input type="text" id="npNom" data-keep="npNom" placeholder="Ex. Refaire la salle de bain"></div>
       <div class="field"><label>Pour qui</label><div class="chip-row" id="npPersonneRow">${PERSONS.map(p=>`<button type="button" class="chip ${p===ui.newProjetPersonne?'selected':''}" data-person="${p}">${p}</button>`).join('')}</div></div>
       <div class="field"><label>Type</label><div class="chip-row" id="npTypeRow">${TYPES.map(t=>`<button type="button" class="chip ${t===ui.newProjetType?'selected':''}" data-type="${t}">${t}</button>`).join('')}</div></div>
       <div class="field"><label>Priorité</label><div class="chip-row" id="npPrioRow">${PRIORITIES.map(pr=>`<button type="button" class="chip ${pr===ui.newProjetPriorite?'selected':''}" data-prio="${pr}">${pr}</button>`).join('')}</div></div>
       <div class="row2">
-        <div class="field"><label for="npEcheance">Échéance (facultatif)</label><input type="date" id="npEcheance"></div>
-        <div class="field"><label for="npObjectif">Objectif à atteindre</label><input type="number" id="npObjectif" min="0" step="10" value="0"></div>
+        <div class="field"><label for="npEcheance">Échéance (facultatif)</label><input type="date" id="npEcheance" data-keep="npEcheance"></div>
+        <div class="field"><label for="npObjectif">Objectif à atteindre</label><input type="number" id="npObjectif" data-keep="npObjectif" min="0" step="10" value="0"></div>
       </div>
       <p class="subtext" id="npMonthlyHint" style="margin-top:-6px;">${formatMonthlyHint(0, '')}</p>
       <button class="primary" id="btnSaveProjet">Enregistrer le projet</button>
@@ -1066,7 +1348,7 @@ function renderVideGrenier(){
       <button class="primary" id="btnToggleAddVG">${ui.showAddVG ? 'Fermer' : '+ Ajouter'}</button>
     </div>
     ${ui.showAddVG ? `<div class="add-form">
-        <div class="field"><label for="vgNom">Objet recherché</label><input type="text" id="vgNom" placeholder="Ex. Vélo enfant"></div>
+        <div class="field"><label for="vgNom">Objet recherché</label><input type="text" id="vgNom" data-keep="vgNom" placeholder="Ex. Vélo enfant"></div>
         <div class="field"><label>Pour qui</label><div class="chip-row" id="vgPersonneRow">${PERSONS.map(p=>`<button type="button" class="chip ${p===ui.newVGPersonne?'selected':''}" data-person="${p}">${p}</button>`).join('')}</div></div>
         <button class="primary" id="btnSaveVG">Ajouter à la liste</button>
       </div>` : ''}
@@ -1095,9 +1377,9 @@ function renderIdeeCard(idee, accent, categories, index){
 
 function renderAddIdeeForm(personne, categories){
   return `<div class="add-form">
-    <div class="field"><label for="ideeNom">Idée / envie</label><input type="text" id="ideeNom" placeholder="Ex. Robe d'été"></div>
+    <div class="field"><label for="ideeNom">Idée / envie</label><input type="text" id="ideeNom" data-keep="ideeNom" placeholder="Ex. Robe d'été"></div>
     <div class="field"><label for="ideeCategorie">Catégorie</label>
-      <input type="text" id="ideeCategorie" list="categorieSuggestions-${personne}" placeholder="Ex. Vêtements, Déco, Loisirs...">
+      <input type="text" id="ideeCategorie" data-keep="ideeCategorie" list="categorieSuggestions-${personne}" placeholder="Ex. Vêtements, Déco, Loisirs...">
       <datalist id="categorieSuggestions-${personne}">${categories.map(c=>`<option value="${escapeHtml(c)}">`).join('')}</datalist>
     </div>
     <div class="field"><label>Priorité</label><div class="chip-row" id="ideePrioRow">${SIMPLE_PRIORITIES.map(pr=>`<button type="button" class="chip ${pr===ui.newIdeePriorite?'selected':''}" data-prio="${pr}">${pr}</button>`).join('')}</div></div>
@@ -1107,7 +1389,7 @@ function renderAddIdeeForm(personne, categories){
 
 function renderIdees(personne){
   const list = state.idees.filter(i=>i.personne===personne);
-  const styles = IDEA_PRIORITY_STYLES[personne];
+  const styles = (sombreActif() ? IDEA_STYLES_SOMBRE : IDEA_PRIORITY_STYLES)[personne];
   const accent = PERSON_COLORS[personne];
   const categories = [...new Set(list.map(i=>i.categorie).filter(Boolean))].sort();
 
@@ -1162,6 +1444,7 @@ function renderActiviteCard(a, index){
       <div class="activity-body">
         <div class="activity-name">${escapeHtml(a.nom)}</div>
         <div class="activity-meta">
+          ${Number(a.prix)>0 ? `<span class="prix-badge">${euros(a.prix)}</span>`:''}
           ${a.emplacement ? `<span class="meta-item">${ICON_PIN}${escapeHtml(a.emplacement)}</span>`:''}
           ${a.lien ? `<a href="${escapeHtml(a.lien)}" target="_blank" rel="noopener noreferrer" class="act-link">${ICON_LINK}Voir le lien</a>`:''}
         </div>
@@ -1176,6 +1459,7 @@ function renderActiviteCard(a, index){
         <div class="field"><label>Lien</label><input type="url" class="ea-lien" value="${escapeHtml(a.lien||'')}" placeholder="https://..."></div>
         <div class="field"><label>Emplacement</label><input type="text" class="ea-lieu" value="${escapeHtml(a.emplacement||'')}"></div>
       </div>
+      <div class="field"><label>Prix estimé</label><input type="number" class="ea-prix" min="0" step="1" value="${Number(a.prix)||0}"></div>
       <div class="field" style="margin-bottom:0;"><label>Priorité</label><div class="chip-row ea-prio-row">${SIMPLE_PRIORITIES.map(pr=>`<button type="button" class="chip ${pr===a.priorite?'selected':''}" data-prio="${pr}">${pr}</button>`).join('')}</div></div>
     </div>` : ''}
   </div>`;
@@ -1183,11 +1467,12 @@ function renderActiviteCard(a, index){
 
 function renderAddActiviteForm(){
   return `<div class="add-form">
-    <div class="field"><label for="actNom">Nom de l'activité</label><input type="text" id="actNom" placeholder="Ex. Randonnée au lac"></div>
+    <div class="field"><label for="actNom">Nom de l'activité</label><input type="text" id="actNom" data-keep="actNom" placeholder="Ex. Randonnée au lac"></div>
     <div class="row2">
-      <div class="field"><label for="actLien">Lien (facultatif)</label><input type="url" id="actLien" placeholder="https://..."></div>
-      <div class="field"><label for="actLieu">Emplacement (facultatif)</label><input type="text" id="actLieu" placeholder="Ex. Annecy"></div>
+      <div class="field"><label for="actLien">Lien (facultatif)</label><input type="url" id="actLien" data-keep="actLien" placeholder="https://..."></div>
+      <div class="field"><label for="actLieu">Emplacement (facultatif)</label><input type="text" id="actLieu" data-keep="actLieu" placeholder="Ex. Annecy"></div>
     </div>
+    <div class="field"><label for="actPrix">Prix estimé (facultatif)</label><input type="number" id="actPrix" data-keep="actPrix" min="0" step="1" placeholder="0"></div>
     <div class="field"><label>Priorité</label><div class="chip-row" id="actPrioRow">${SIMPLE_PRIORITIES.map(pr=>`<button type="button" class="chip ${pr===ui.newActivitePriorite?'selected':''}" data-prio="${pr}">${pr}</button>`).join('')}</div></div>
     <button class="primary" id="btnSaveActivite">Ajouter l'activité</button>
   </div>`;
@@ -1195,6 +1480,8 @@ function renderAddActiviteForm(){
 
 function renderActivites(){
   const list = state.activites;
+  // Budget à prévoir : seulement les activités qui restent à faire
+  const budgetActivites = list.filter(a=>!a.fait).reduce((s,a)=>s+(Number(a.prix)||0),0);
   let body = '';
   if(list.length===0){
     body = `<div class="empty"><span class="big">Aucune activité prévue.</span>Ajoutez-en une ci-dessus.</div>`;
@@ -1202,19 +1489,81 @@ function renderActivites(){
     body = SIMPLE_PRIORITIES.map(prio=>{
       const items = list.filter(a=>a.priorite===prio);
       if(items.length===0) return '';
-      const st = SIMPLE_PRIORITY_STYLES[prio];
+      const st = (sombreActif() ? SIMPLE_STYLES_SOMBRE : SIMPLE_PRIORITY_STYLES)[prio];
       const cards = items.map((a,ix)=>renderActiviteCard(a, ix)).join('');
       return `<div class="prio-section"><div class="prio-header" style="background:${st.bg};color:${st.text}"><span class="prio-name">${prio}</span><span class="prio-count">${items.length}</span></div>${cards}</div>`;
     }).join('');
   }
   return `<div class="tab-panel">
     <div class="add-toggle">
-      <div><h2 class="section-title" style="margin-bottom:2px;">Activités à faire</h2><p class="subtext" style="margin-bottom:0;">${list.length} activité${list.length>1?'s':''}</p></div>
+      <div><h2 class="section-title" style="margin-bottom:2px;">Activités à faire</h2><p class="subtext" style="margin-bottom:0;">${list.length} activité${list.length>1?'s':''}${budgetActivites>0?` · ${euros(budgetActivites)} à prévoir`:''}</p></div>
       <button class="primary" id="btnToggleAddActivite">${ui.showAddActivite?'Fermer':'+ Ajouter'}</button>
     </div>
     ${ui.showAddActivite ? renderAddActiviteForm() : ''}
     ${body}
   </div>`;
+}
+
+// Mémorise ce qu'on achète souvent, pour le reproposer en un geste la fois suivante
+function memoriserArticle(nom, section){
+  const cle = section + ':' + nom.toLowerCase();
+  const e = state.coursesFrequentes[cle] || { nom, section, n: 0 };
+  e.nom = nom; e.section = section; e.n = (e.n || 0) + 1;
+  state.coursesFrequentes[cle] = e;
+}
+// Suggestions : les plus repris, en excluant ce qui est déjà sur la liste
+function articlesSuggeres(limite){
+  const dejaLa = new Set(state.courses.map(c=>c.section + ':' + c.nom.toLowerCase()));
+  return Object.entries(state.coursesFrequentes)
+    .filter(([cle, e]) => e.n >= 2 && !dejaLa.has(cle))
+    .sort((a,b)=> b[1].n - a[1].n)
+    .slice(0, limite)
+    .map(([cle, e]) => ({ cle, ...e }));
+}
+
+// --- Partage de la liste de courses -------------------------------------
+function texteListeCourses(){
+  const lignes = ['Liste de courses'];
+  COURSE_SECTIONS.forEach(sec=>{
+    const items = state.courses.filter(c=>c.section===sec.id && !c.pris);
+    if(!items.length) return;
+    lignes.push('', `${sec.emoji} ${sec.id}`);
+    items.forEach(c=> lignes.push(`- ${c.nom}${c.qte ? ` (${c.qte})` : ''}`));
+  });
+  if(lignes.length === 1) lignes.push('', '(rien à prendre)');
+  return lignes.join('\n');
+}
+
+function messageFugitif(txt){
+  let el = document.getElementById('toast');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = txt;
+  el.classList.add('visible');
+  clearTimeout(messageFugitif._t);
+  messageFugitif._t = setTimeout(()=> el.classList.remove('visible'), 2600);
+}
+
+async function partagerCourses(){
+  const texte = texteListeCourses();
+  // Sur téléphone, on ouvre le partage natif (Messages, WhatsApp, mail...)
+  if(navigator.share){
+    try{
+      await navigator.share({ title: 'Liste de courses', text: texte });
+      return;
+    }catch(e){
+      if(e && e.name === 'AbortError') return;   // partage annulé, rien à signaler
+    }
+  }
+  try{
+    await navigator.clipboard.writeText(texte);
+    messageFugitif('Liste copiée, prête à être collée');
+  }catch(e){
+    messageFugitif('Copie impossible sur ce navigateur');
+  }
 }
 
 function renderCourseItem(item, index){
@@ -1232,6 +1581,7 @@ function renderCourses(){
   const total = state.courses.length;
   const pris = state.courses.filter(c=>c.pris).length;
   const restants = total - pris;
+  const suggestions = articlesSuggeres(8);
 
   const sections = COURSE_SECTIONS.map(sec=>{
     const items = state.courses.filter(c=>c.section===sec.id);
@@ -1259,21 +1609,123 @@ function renderCourses(){
       ${pris ? `<button class="primary" id="btnViderPris" style="background:transparent;color:var(--ink);border:1.5px solid var(--line);">Vider les pris</button>` : ''}
     </div>
 
+    ${restants ? `<button class="primary btn-partage" id="btnPartagerCourses">${ICON_SHARE} Partager la liste</button>` : ''}
+
     <div class="quick-add">
       <div class="chip-row" style="margin-bottom:8px;">
         ${COURSE_SECTIONS.map(s=>`<button type="button" class="chip course-sec-chip ${s.id===ui.courseSection?'selected':''}" data-sec="${s.id}"
-          ${s.id===ui.courseSection?`style="background:${s.couleur};color:#fff;border-color:${s.couleur}"`:''}>${s.emoji} ${s.id}</button>`).join('')}
+          style="--sec-color:${s.couleur}">${s.emoji} ${s.id}</button>`).join('')}
       </div>
       <div class="quick-add-row">
-        <input type="text" id="courseNom" placeholder="Ajouter un article…" autocomplete="off">
-        <input type="text" id="courseQte" placeholder="Qté" class="qte-input" autocomplete="off">
+        <input type="text" id="courseNom" data-keep="courseNom" placeholder="Ajouter un article…" autocomplete="off">
+        <input type="text" id="courseQte" data-keep="courseQte" placeholder="Qté" class="qte-input" autocomplete="off">
         <button class="primary" id="btnAddCourse">+</button>
       </div>
       <p class="subtext" style="margin:6px 0 0; font-size:11px;">Appuyez sur Entrée pour enchaîner les articles.</p>
     </div>
 
+    ${suggestions.length ? `<div class="suggestions">
+      <div class="suggestions-titre">Vous reprenez souvent</div>
+      <div class="chip-row">
+        ${suggestions.map(s=>`<button type="button" class="chip suggestion-chip" data-cle="${escapeHtml(s.cle)}">${pickEmoji(s.nom,'🛒')} ${escapeHtml(s.nom)}</button>`).join('')}
+      </div>
+    </div>` : ''}
+
     ${sections}
   </div>`;
+}
+
+// --- Réorganisation par glisser-déposer ---------------------------------
+// La carte saisie suit le doigt ; les voisines s'écartent pour ouvrir la place.
+// La position visée est calculée à partir de la distance parcourue plutôt que
+// mesurée sur la page : c'est exact quelle que soit la vitesse du geste.
+let glisse = null;
+
+function cartesVoisines(card){
+  return Array.from(card.parentElement.querySelectorAll(':scope > .card'));
+}
+
+function appliquerOrdre(section, ids){
+  // On réécrit uniquement les emplacements occupés par ce groupe :
+  // les projets des autres priorités ne bougent pas.
+  const emplacements = [];
+  state.projets.forEach((p,i)=>{ if(ids.includes(p.id)) emplacements.push(i); });
+  const objets = ids.map(id => state.projets.find(p=>p.id===id)).filter(Boolean);
+  if(objets.length !== emplacements.length) return;
+  emplacements.forEach((pos,k)=> state.projets[pos] = objets[k]);
+  commit();
+}
+
+function demarrerGlisse(handle, e){
+  const card = handle.closest('.card');
+  const section = card.parentElement;
+  const cartes = cartesVoisines(card);
+  if(cartes.length < 2) return;                    // rien à réordonner
+
+  // Hauteur d'un emplacement, mesurée avant tout déplacement
+  const pas = Math.abs(cartes[1].offsetTop - cartes[0].offsetTop) || card.offsetHeight;
+
+  glisse = {
+    card, section, cartes, pas,
+    depart: cartes.indexOf(card),
+    cible: cartes.indexOf(card),
+    originY: e.clientY, bouge: false
+  };
+  card.classList.add('dragging');
+  section.classList.add('reordering');
+  document.body.style.userSelect = 'none';
+  // Écouteurs posés sur le document : déplacer une carte dans la page
+  // relâcherait la capture du pointeur, et le relâchement du doigt serait perdu.
+  document.addEventListener('pointermove', pendantGlisse);
+  document.addEventListener('pointerup', finirGlisse);
+  document.addEventListener('pointercancel', finirGlisse);
+}
+
+function pendantGlisse(e){
+  if(!glisse) return;
+  const { card, cartes, pas, depart } = glisse;
+  const dy = e.clientY - glisse.originY;
+  if(Math.abs(dy) > 3) glisse.bouge = true;
+  card.style.transform = `translateY(${dy}px)`;
+
+  // Un demi-emplacement parcouru fait basculer d'un rang
+  const cible = Math.max(0, Math.min(cartes.length - 1, depart + Math.round(dy / pas)));
+  if(cible !== glisse.cible){
+    glisse.cible = cible;
+    // Les cartes situées entre le départ et la cible s'écartent d'un cran
+    cartes.forEach((c, i)=>{
+      if(c === card) return;
+      let decalage = 0;
+      if(cible > depart && i > depart && i <= cible) decalage = -pas;
+      else if(cible < depart && i >= cible && i < depart) decalage = pas;
+      c.style.transform = decalage ? `translateY(${decalage}px)` : '';
+    });
+  }
+
+  // défilement automatique près des bords de l'écran
+  const marge = 90;
+  if(e.clientY < marge) window.scrollBy(0, -12);
+  else if(e.clientY > window.innerHeight - marge) window.scrollBy(0, 12);
+}
+
+function finirGlisse(){
+  if(!glisse) return;
+  const { card, section, cartes, depart, cible, bouge } = glisse;
+  document.removeEventListener('pointermove', pendantGlisse);
+  document.removeEventListener('pointerup', finirGlisse);
+  document.removeEventListener('pointercancel', finirGlisse);
+  cartes.forEach(c=> c.style.transform = '');
+  card.classList.remove('dragging');
+  section.classList.remove('reordering');
+  document.body.style.userSelect = '';
+  glisse = null;
+
+  if(bouge && cible !== depart){
+    const ids = cartes.map(c=>c.dataset.id);
+    const [deplace] = ids.splice(depart, 1);
+    ids.splice(cible, 0, deplace);
+    appliquerOrdre(section, ids);
+  }
 }
 
 function moveWithinPriority(id, direction){
@@ -1346,9 +1798,9 @@ function attachPageEvents(){
   // Projets : ajout
   const btnToggleAddProjet = document.getElementById('btnToggleAddProjet');
   if(btnToggleAddProjet) btnToggleAddProjet.addEventListener('click', ()=>{ ui.showAddProjet = !ui.showAddProjet; renderAll(); });
-  document.querySelectorAll('#npPersonneRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newProjetPersonne = chip.dataset.person; renderAll(); }));
-  document.querySelectorAll('#npTypeRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newProjetType = chip.dataset.type; renderAll(); }));
-  document.querySelectorAll('#npPrioRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newProjetPriorite = chip.dataset.prio; renderAll(); }));
+  document.querySelectorAll('#npPersonneRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newProjetPersonne = chip.dataset.person; activerPastille(chip); }));
+  document.querySelectorAll('#npTypeRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newProjetType = chip.dataset.type; activerPastille(chip); }));
+  document.querySelectorAll('#npPrioRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newProjetPriorite = chip.dataset.prio; activerPastille(chip); }));
   const npObjectifEl = document.getElementById('npObjectif');
   const npEcheanceEl = document.getElementById('npEcheance');
   function refreshHint(){
@@ -1379,6 +1831,16 @@ function attachPageEvents(){
     const up = card.querySelector('.reorder-up'); const down = card.querySelector('.reorder-down');
     if(up) up.addEventListener('click', ()=> moveWithinPriority(id, -1));
     if(down) down.addEventListener('click', ()=> moveWithinPriority(id, 1));
+
+    const handle = card.querySelector('.drag-handle');
+    if(handle){
+      handle.addEventListener('pointerdown', e=>{ e.preventDefault(); demarrerGlisse(handle, e); });
+      // au clavier, les flèches gardent le même rôle
+      handle.addEventListener('keydown', e=>{
+        if(e.key === 'ArrowUp'){ e.preventDefault(); ui.focusHandle = id; moveWithinPriority(id, -1); }
+        else if(e.key === 'ArrowDown'){ e.preventDefault(); ui.focusHandle = id; moveWithinPriority(id, 1); }
+      });
+    }
 
     card.querySelector('.amt-minus').addEventListener('click', ()=>{ majEpargne(proj, (Number(proj.epargne)||0) - 10); });
     card.querySelector('.amt-plus').addEventListener('click', ()=>{ majEpargne(proj, (Number(proj.epargne)||0) + 10); });
@@ -1445,7 +1907,7 @@ function attachPageEvents(){
   // Vide-grenier
   const btnToggleAddVG = document.getElementById('btnToggleAddVG');
   if(btnToggleAddVG) btnToggleAddVG.addEventListener('click', ()=>{ ui.showAddVG = !ui.showAddVG; renderAll(); });
-  document.querySelectorAll('#vgPersonneRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newVGPersonne = chip.dataset.person; renderAll(); }));
+  document.querySelectorAll('#vgPersonneRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newVGPersonne = chip.dataset.person; activerPastille(chip); }));
   const btnSaveVG = document.getElementById('btnSaveVG');
   if(btnSaveVG) btnSaveVG.addEventListener('click', ()=>{
     const nom = document.getElementById('vgNom').value.trim();
@@ -1463,7 +1925,7 @@ function attachPageEvents(){
   // Idées
   const btnToggleAddIdee = document.getElementById('btnToggleAddIdee');
   if(btnToggleAddIdee) btnToggleAddIdee.addEventListener('click', ()=>{ ui.showAddIdee=!ui.showAddIdee; renderAll(); });
-  document.querySelectorAll('#ideePrioRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newIdeePriorite=chip.dataset.prio; renderAll(); }));
+  document.querySelectorAll('#ideePrioRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newIdeePriorite=chip.dataset.prio; activerPastille(chip); }));
   document.querySelectorAll('[data-groupby]').forEach(btn=>{
     btn.addEventListener('click', ()=>{ ui.ideeGroupBy = btn.dataset.groupby; renderAll(); });
   });
@@ -1495,14 +1957,15 @@ function attachPageEvents(){
   // Activités
   const btnToggleAddActivite = document.getElementById('btnToggleAddActivite');
   if(btnToggleAddActivite) btnToggleAddActivite.addEventListener('click', ()=>{ ui.showAddActivite=!ui.showAddActivite; renderAll(); });
-  document.querySelectorAll('#actPrioRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newActivitePriorite=chip.dataset.prio; renderAll(); }));
+  document.querySelectorAll('#actPrioRow .chip').forEach(chip=> chip.addEventListener('click', ()=>{ ui.newActivitePriorite=chip.dataset.prio; activerPastille(chip); }));
   const btnSaveActivite = document.getElementById('btnSaveActivite');
   if(btnSaveActivite) btnSaveActivite.addEventListener('click', ()=>{
     const nom = document.getElementById('actNom').value.trim();
     if(!nom) return;
     const lien = document.getElementById('actLien').value.trim();
     const emplacement = document.getElementById('actLieu').value.trim();
-    state.activites.push({ id: uid(), nom, lien, emplacement, priorite: ui.newActivitePriorite, fait:false });
+    const prix = Math.max(0, Number(document.getElementById('actPrix').value) || 0);
+    state.activites.push({ id: uid(), nom, lien, emplacement, prix, priorite: ui.newActivitePriorite, fait:false });
     ui.showAddActivite = false;
     commit();
   });
@@ -1524,12 +1987,13 @@ function attachPageEvents(){
     panel.querySelector('.ea-nom').addEventListener('change', e=>{ const v=e.target.value.trim(); if(v){ act.nom=v; commit(); } });
     panel.querySelector('.ea-lien').addEventListener('change', e=>{ act.lien = e.target.value.trim(); commit(); });
     panel.querySelector('.ea-lieu').addEventListener('change', e=>{ act.emplacement = e.target.value.trim(); commit(); });
+    panel.querySelector('.ea-prix').addEventListener('change', e=>{ act.prix = Math.max(0, Number(e.target.value)||0); commit(); });
     panel.querySelectorAll('.ea-prio-row .chip').forEach(chip=> chip.addEventListener('click', ()=>{ act.priorite = chip.dataset.prio; commit(); }));
   });
 
   // Courses
   document.querySelectorAll('.course-sec-chip').forEach(chip=>{
-    chip.addEventListener('click', ()=>{ ui.courseSection = chip.dataset.sec; ui.focusCourse = true; renderAll(); });
+    chip.addEventListener('click', ()=>{ ui.courseSection = chip.dataset.sec; activerPastille(chip); document.getElementById('courseNom').focus(); });
   });
   const courseNom = document.getElementById('courseNom');
   const courseQte = document.getElementById('courseQte');
@@ -1537,6 +2001,7 @@ function attachPageEvents(){
     const nom = courseNom.value.trim();
     if(!nom) return;
     state.courses.push({ id: uid(), nom, qte: courseQte.value.trim(), section: ui.courseSection, pris:false });
+    memoriserArticle(nom, ui.courseSection);
     courseNom.value = ''; courseQte.value = '';
     ui.focusCourse = true;
     commit();
@@ -1550,6 +2015,18 @@ function attachPageEvents(){
     if(!c) return;
     item.querySelector('.course-check').addEventListener('click', ()=>{ c.pris = !c.pris; commit(); });
   });
+  document.querySelectorAll('.suggestion-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const s = state.coursesFrequentes[chip.dataset.cle];
+      if(!s) return;
+      state.courses.push({ id: uid(), nom: s.nom, qte: '', section: s.section, pris:false });
+      memoriserArticle(s.nom, s.section);
+      commit();
+    });
+  });
+  const btnPartager = document.getElementById('btnPartagerCourses');
+  if(btnPartager) btnPartager.addEventListener('click', partagerCourses);
+
   const btnViderPris = document.getElementById('btnViderPris');
   if(btnViderPris) btnViderPris.addEventListener('click', ()=>{
     state.courses = state.courses.filter(c=>!c.pris);
@@ -1561,6 +2038,12 @@ function attachPageEvents(){
     ui.focusCourse = false;
   }
 
+  if(ui.focusHandle){
+    const h = document.querySelector(`.drag-handle[data-id="${ui.focusHandle}"]`);
+    if(h) h.focus();
+    ui.focusHandle = null;
+  }
+
   // Garde le curseur dans la barre de recherche pendant la frappe
   if(ui.focusSearch){
     const s = document.getElementById('projetSearch');
@@ -1570,6 +2053,57 @@ function attachPageEvents(){
 }
 
 subscribeState();
+
+// --- Fonctionnement hors ligne et mises à jour ---------------------------
+// Le service worker garde une copie locale de l'application pour qu'elle
+// démarre sans réseau. Quand une nouvelle version est publiée, on propose
+// de recharger plutôt que de l'imposer au milieu d'une saisie.
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', async ()=>{
+    try{
+      const reg = await navigator.serviceWorker.register('sw.js');
+
+      const proposerMiseAJour = (worker)=>{
+        const banniere = document.getElementById('updateBar');
+        if(!banniere) return;
+        banniere.style.display = 'flex';
+        banniere.querySelector('button').onclick = ()=>{
+          worker.postMessage('ACTIVER_MAINTENANT');
+        };
+      };
+
+      if(reg.waiting) proposerMiseAJour(reg.waiting);
+      reg.addEventListener('updatefound', ()=>{
+        const nouveau = reg.installing;
+        if(!nouveau) return;
+        nouveau.addEventListener('statechange', ()=>{
+          // "installed" avec un contrôleur actif = une version plus récente attend
+          if(nouveau.state === 'installed' && navigator.serviceWorker.controller){
+            proposerMiseAJour(nouveau);
+          }
+        });
+      });
+
+      let rechargement = false;
+      navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+        if(rechargement) return;
+        rechargement = true;
+        location.reload();
+      });
+    }catch(e){
+      console.warn('Service worker non enregistré', e);
+    }
+  });
+}
+
+// Indicateur de connexion : complète l'information venant de Firestore
+function majEtatReseau(){
+  if(!navigator.onLine) setSyncStatus('hors ligne');
+  else if(document.getElementById('loadingTag').textContent === 'hors ligne') setSyncStatus('');
+}
+window.addEventListener('online', majEtatReseau);
+window.addEventListener('offline', majEtatReseau);
+majEtatReseau();
 </script>
 </body>
 </html>

@@ -1,0 +1,31 @@
+{
+  "name": "Le carnet de projets",
+  "short_name": "Carnet",
+  "description": "Réserves, projets, courses et idées de la famille, au même endroit.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1F2E45",
+  "theme_color": "#1F2E45",
+  "lang": "fr",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Liste de courses",
+      "short_name": "Courses",
+      "url": "./index.html?onglet=courses",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mes projets",
+      "short_name": "Projets",
+      "url": "./index.html?onglet=projets",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

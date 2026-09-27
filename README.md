@@ -75,6 +75,56 @@ avoir besoin d'ouvrir le même fichier ni de recharger la page.
 
 ---
 
+## Installer l'application sur l'écran d'accueil du téléphone
+
+L'application a son icône et se comporte comme une vraie application une fois
+installée (plein écran, sans barre d'adresse).
+
+- **iPhone / iPad** : ouvrez le site dans Safari, touchez le bouton Partager,
+  puis « Sur l'écran d'accueil ».
+- **Android** : ouvrez le site dans Chrome, menu ⋮, puis « Installer
+  l'application » ou « Ajouter à l'écran d'accueil ».
+
+Sur Android, un appui long sur l'icône propose deux raccourcis : aller
+directement à la liste de courses ou aux projets.
+
+> Les fichiers concernés sont `manifest.json` et le dossier `icons/`.
+> N'oubliez pas de les envoyer sur GitHub en même temps que `index.html`.
+> Pour régénérer les icônes après un changement de visuel :
+> `python3 tools/make_icons.py` (nécessite Pillow).
+
+## Le carnet fonctionne hors ligne
+
+Une fois le site ouvert une première fois, il démarre et reste utilisable sans
+réseau : pratique pour la liste de courses dans un magasin mal couvert. Les
+modifications faites hors ligne sont conservées sur l'appareil et repartent
+toutes seules vers le serveur dès que la connexion revient. L'indicateur en haut
+à droite affiche « hors ligne » le cas échéant.
+
+### Publier une mise à jour
+
+Quand vous modifiez `index.html`, poussez simplement sur GitHub comme
+d'habitude. Les appareils verront apparaître un bandeau « Une nouvelle version
+du carnet est disponible » avec un bouton pour recharger.
+
+> Si vous modifiez la liste des fichiers mis en cache (nouvelle icône, nouveau
+> fichier), incrémentez `VERSION` en haut de `sw.js` (`'v1'` → `'v2'`) pour
+> forcer le renouvellement du cache sur tous les appareils.
+
+## Quelques usages utiles
+
+- **Réordonner les projets** : attrapez la poignée (les six points, à droite de
+  la carte) et faites glisser. Au clavier, sélectionnez la poignée puis utilisez
+  les flèches haut et bas.
+- **Apparence** : le bouton rond en haut à droite fait défiler trois réglages,
+  « selon le téléphone », « clair » et « sombre ». Le choix est propre à chaque
+  appareil.
+- **Partager les courses** : le bouton « Partager la liste » ouvre le partage du
+  téléphone (Messages, WhatsApp, mail). Seuls les articles restant à prendre
+  sont envoyés. Sur ordinateur, la liste est copiée dans le presse-papiers.
+- **Articles fréquents** : dès qu'un article a été ajouté deux fois, il est
+  reproposé sous le champ de saisie, ajoutable d'un seul geste.
+
 ## Pour aller plus loin (facultatif)
 
 - **Sécurité renforcée** : dans cette version, quiconque connaît l'adresse de
@@ -95,6 +145,10 @@ avoir besoin d'ouvrir le même fichier ni de recharger la page.
 index.html          → l'application (à ne pas modifier sauf si vous savez ce que vous faites)
 firebase-config.js   → vos identifiants de projet Firebase (à remplir, étape 1)
 firestore.rules      → règles de sécurité à coller dans la console Firebase (étape 2)
+manifest.json        → nom, couleurs et icônes pour l'installation sur mobile
+sw.js                → fonctionnement hors ligne et gestion des mises à jour
+icons/               → les icônes de l'application (générées par tools/make_icons.py)
+tools/make_icons.py  → script de génération des icônes
 netlify.toml         → indique à Netlify comment publier le site (rien à changer)
 .gitignore
 README.md            → ce guide
