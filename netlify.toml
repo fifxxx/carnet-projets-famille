@@ -1,6 +1,15 @@
 [build]
   publish = "."
 
+# Filet de sécurité : les téléphones ont pu mémoriser une ancienne version du
+# manifeste qui cherchait les icônes dans "icons". On les renvoie vers "icones"
+# pour que l'icône s'affiche sans attendre le renouvellement de leur cache.
+[[redirects]]
+  from = "/icons/*"
+  to = "/icones/:splat"
+  status = 301
+  force = true
+
 [[headers]]
   for = "/*"
   [headers.values]

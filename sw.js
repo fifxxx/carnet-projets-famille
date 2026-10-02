@@ -10,7 +10,7 @@
  * Pour forcer la mise à jour de tous les appareils après un changement,
  * il suffit d'incrémenter VERSION ci-dessous.
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'carnet-' + VERSION;
 
 const A_PRECHARGER = [
@@ -18,10 +18,10 @@ const A_PRECHARGER = [
   './index.html',
   './firebase-config.js',
   './manifest.json',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/apple-touch-icon.png',
-  './icons/favicon-32.png'
+  './icones/icon-192.png',
+  './icones/icon-512.png',
+  './icones/apple-touch-icon.png',
+  './icones/favicon-32.png'
 ];
 
 // Domaines dont les réponses ne doivent jamais être servies depuis le cache
@@ -40,11 +40,19 @@ const EXTERNES_CACHABLES = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE)
-      .then(c => c.addAll(A_PRECHARGER.map(u => new Request(u, { cache: 'reload' }))))
-      .catch(err => console.warn('Préchargement partiel', err))
-  );
+  e.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    // Volontairement fichier par fichier : cache.addAll() est atomique, donc un
+    // seul fichier manquant (une icône renommée, par exemple) ferait échouer tout
+    // le préchargement et l'application ne démarrerait plus hors ligne.
+    await Promise.all(A_PRECHARGER.map(async u => {
+      try{
+        await cache.add(new Request(u, { cache: 'reload' }));
+      }catch(err){
+        console.warn('Fichier non préchargé :', u, err);
+      }
+    }));
+  })());
 });
 
 self.addEventListener('activate', e => {
